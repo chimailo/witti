@@ -1,0 +1,60 @@
+version: '3.7'
+
+services:
+  db:
+    build:
+      context: ./services/db
+      dockerfile: Dockerfile
+    env_file: .env.db
+    expose:
+      - 5432
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data/
+        volume:
+          nocopy: true
+
+  app:
+    build:
+      context: ./services/app
+      dockerfile: Dockerfile
+    command: gunicorn --bind 0.0.0.0:5000 --access-logfile - manage:app
+    depends_on:
+      - db
+    environment:
+      - APP_SETTINGS=src.config.ProductionConfig
+      - DATABASE=postgres
+      - FLASK_APP=src/__init__.py
+      - FLASK_ENV=production
+      - SQL_HOST=db
+      - SQL_PORT=5432
+    expose:
+      - 5000
+
+  client:
+    build:
+      context: ./services/client
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
+    container_name: client
+    ports:
+      - '3030:80'
+    depends_on:
+      - src
+
+  nginx:
+    build:
+      context: ./services/nginx
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - src
+      - client
+    restart: always
+
+volumes:
+  postgres_data:

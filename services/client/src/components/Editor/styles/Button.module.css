@@ -1,0 +1,34 @@
+.buttonWrapper {
+  display: inline-block;
+}
+
+.button {
+  margin: 0;
+  padding: 0;
+  width: 48px;
+  height: 48px;
+  box-sizing: border-box;
+  line-height: 1.2em;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+}
+
+.button:hover,
+.button:focus {
+  background: rgba(20, 184, 156, 0.1);
+  outline: 0;
+}
+
+.active {
+  background: rgba(20, 184, 156, 0.2);
+}
+
+.button:disabled {
+  /* background-color: #F5F5F5; */
+  color: rgba(20, 184, 156, 0.4);
+}

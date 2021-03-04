@@ -1,0 +1,39 @@
+# client
+#============
+
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# production
+build
+static/
+
+# misc
+.DS_Store
+.env*
+npm-debug.log*
+
+
+# app
+#===========
+
+# dependencies
+venv/
+
+# testing
+.coverage
+
+# misc
+__pycache__/
+.pytest_cache/
+*.pyc
+
+chattest/
+.vscode/
+app.db
+app.sqbpro

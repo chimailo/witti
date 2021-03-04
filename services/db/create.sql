@@ -1,0 +1,3 @@
+CREATE DATABASE witti;
+CREATE DATABASE witti_dev;
+CREATE DATABASE witti_test;
