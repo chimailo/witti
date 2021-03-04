@@ -40,8 +40,8 @@ export default function PostTab() {
   return (
     <>
       <Header
+        back
         title={`${user?.profile.name} `}
-        user={user}
         meta={`${data?.pages[0].total} posts`}
       />
       <ErrorBoundary

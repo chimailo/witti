@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme: Theme) =>
     paper: {
       margin: '4px 0',
       overflow: 'auto',
-      height: 'calc(100vh - 54px - 4px)',
+      height: 'calc(100vh - 54px - 4px - 4px)',
       padding: theme.spacing(1, 0, 2),
     },
   })

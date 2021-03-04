@@ -41,7 +41,8 @@ export default function CommentsTab() {
   return (
     <>
       <Header
-        title={`${user?.profile.name}'s profile `}
+        back
+        title={`${user?.profile.name}`}
         user={user}
         meta={`${data?.pages[0].total} replies`}
       />

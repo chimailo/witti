@@ -26,6 +26,9 @@ const useStyles = makeStyles((theme: Theme) =>
     paper: {
       marginTop: 4,
       padding: theme.spacing(2),
+      [theme.breakpoints.down('xs')]: {
+        padding: theme.spacing(2, 1),
+      },
     },
     embed: {
       display: 'flex',
@@ -89,7 +92,7 @@ export default function PostCard({ post, cacheKey, page }: IProps) {
           </Box>
         </Link>
         <Box display='flex' alignItems='center' ml={1}>
-          <Typography variant='subtitle2' component='h6'>
+          <Typography variant='subtitle2' component='h6' noWrap>
             {new Date(post.created_on).toLocaleDateString('en-gb', {
               month: 'short',
               day: 'numeric',

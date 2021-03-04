@@ -1,27 +1,21 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-import {
-  InfiniteData,
-  useQueryClient,
-  useQueryErrorResetBoundary,
-} from 'react-query';
+import { InfiniteData } from 'react-query';
 import Avatar from '@material-ui/core/Avatar';
 import Badge from '@material-ui/core/Badge';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import ListItemText from '@material-ui/core/ListItemText';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import { Hidden, Grid, Box, Link, Button, Container } from '@material-ui/core';
+import { Box } from '@material-ui/core';
 import {
   createStyles,
   Theme,
   makeStyles,
-  useTheme,
   withStyles,
 } from '@material-ui/core/styles';
-import { InfiniteMessageResponse, Message, User } from '../types';
+import { InfiniteMessageResponse } from '../types';
 
 const StyledBadge = withStyles((theme: Theme) =>
   createStyles({

@@ -6,7 +6,7 @@ import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
-import { Link, Typography } from '@material-ui/core';
+import { Link, Typography, useMediaQuery } from '@material-ui/core';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
@@ -76,14 +76,15 @@ const plugins = [
 
 interface IProps {
   cacheKey: string;
-  editorRef: React.Ref<PluginEditor>;
-  closeEditor: () => void;
+  editorRef?: React.Ref<PluginEditor>;
+  closeEditor?: () => void;
   post_id?: number;
 }
 
 function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const theme = useTheme();
+  const xsDown = useMediaQuery(theme.breakpoints.down('xs'));
   const history = useHistory<string>();
 
   const { data: auth } = useAuth();
@@ -101,10 +102,10 @@ function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
 
     if (post_id) {
       createComment.mutate({ post_id, body, key: cacheKey });
-      closeEditor();
+      closeEditor && closeEditor();
     } else {
       createPost.mutate({ body, key: KEYS.FEED, author: auth });
-      closeEditor();
+      closeEditor && closeEditor();
       history.push(ROUTES.HOME);
     }
   };
@@ -113,7 +114,7 @@ function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
 
   return (
     <>
-      <Box p={2}>
+      <Box p={xsDown ? 1 : 2}>
         <Box display='flex' justifyContent='space-between'>
           <Box
             display='flex'

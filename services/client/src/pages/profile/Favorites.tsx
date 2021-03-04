@@ -38,7 +38,8 @@ export default function FavoritesTab() {
   return (
     <>
       <Header
-        title={`${user?.profile.name}'s profile `}
+        back
+        title={`${user?.profile.name}`}
         user={user}
         meta={`${data?.pages[0].total} likes`}
       />

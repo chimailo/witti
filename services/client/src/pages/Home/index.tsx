@@ -4,21 +4,21 @@ import { ErrorBoundary } from 'react-error-boundary';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import Paper from '@material-ui/core/Paper';
 import ReplayIcon from '@material-ui/icons/Replay';
 
 import Header from '../../components/Header';
 import LoadMore from '../../components/Loading';
 import PostCard from '../../components/cards/PostCard';
 import useIntersectionObserver from '../../lib/hooks/useIntersectionObserver';
+import Editor from '../../components/Editor';
 import { CenteredLoading } from '../../components/Loading';
 import { KEYS } from '../../lib/constants';
-import { useAuth } from '../../lib/hooks/auth';
 import { useInfinitePosts } from '../../lib/hooks/posts';
 
 export default function Home() {
   const [feed, setFeedType] = useState('latest');
   const loadMoreRef = useRef<HTMLButtonElement>(null);
-  const { data: user } = useAuth();
 
   const {
     data,
@@ -39,13 +39,10 @@ export default function Home() {
 
   return (
     <>
-      <Header
-        avatar
-        title='home'
-        user={user}
-        feed={feed}
-        handleFeedChange={handleFeedChange}
-      />
+      <Header title='home' feed={feed} handleFeedChange={handleFeedChange} />
+      <Paper elevation={0} component='form' style={{ marginTop: 4 }}>
+        <Editor cacheKey={KEYS.FEED} />
+      </Paper>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary

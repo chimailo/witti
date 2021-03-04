@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import { useQueryClient } from 'react-query';
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
@@ -11,6 +12,7 @@ import Select from '@material-ui/core/Select';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles, Theme, createStyles } from '@material-ui/core';
+import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 
 import Sidebar from './Sidebar';
@@ -48,6 +50,7 @@ type HeaderProps = {
   title?: string;
   user?: User;
   avatar?: boolean;
+  back?: boolean;
   meta?: string;
   feed?: string;
   handleFeedChange?: (event: React.ChangeEvent<{ value: unknown }>) => void;
@@ -57,10 +60,11 @@ export default function Header(props: HeaderProps) {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [isSelectOpen, setSelectOpen] = useState(false);
   const classes = useStyles();
+  const history = useHistory();
   const queryClient = useQueryClient();
   const auth = queryClient.getQueryData<User>(KEYS.AUTH);
 
-  const { user, title, avatar, meta, feed, handleFeedChange } = props;
+  const { user, title, back, avatar, meta, feed, handleFeedChange } = props;
 
   const toggleDrawer = (open: boolean) => (
     event: React.KeyboardEvent | React.MouseEvent
@@ -78,29 +82,40 @@ export default function Header(props: HeaderProps) {
 
   return (
     <Toolbar classes={{ root: classes.toolbar }} disableGutters>
-      {avatar && (
-        <Avatar
-          alt={user?.profile.avatar}
-          src={user?.profile.avatar}
-          className={classes.avatar}
-        />
+      {back && (
+        <IconButton
+          size='small'
+          aria-label='go back'
+          onClick={() => history.goBack()}
+          style={{ marginRight: 8 }}
+        >
+          <KeyboardBackspaceIcon color='primary' />
+        </IconButton>
       )}
-      <Box ml={2} style={{ flexGrow: 1 }}>
+      {avatar && (
+        <IconButton
+          size='small'
+          aria-label='menu'
+          onClick={() => history.push(`/${user?.auth.username}/profiles`)}
+        >
+          <Avatar
+            alt={user ? user.profile.avatar : auth?.profile.avatar}
+            src={user ? user.profile.avatar : auth?.profile.avatar}
+            className={classes.avatar}
+          />
+        </IconButton>
+      )}
+      <Box ml={1} flexGrow={1}>
         <Typography
           variant='subtitle1'
-          component='h6'
+          component='h3'
           className={classes.title}
           noWrap
         >
           {title}
         </Typography>
         {meta && (
-          <Typography
-            // variant='body2'
-            color='textSecondary'
-            noWrap
-            style={{ lineHeight: 1 }}
-          >
+          <Typography color='textSecondary' noWrap style={{ lineHeight: 1 }}>
             <small>{meta}</small>
           </Typography>
         )}

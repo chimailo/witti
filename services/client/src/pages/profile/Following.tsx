@@ -35,7 +35,8 @@ export default function FollowersTab() {
   return (
     <>
       <Header
-        title={`${user?.profile.name}'s profile `}
+        back
+        title={`${user?.profile.name}`}
         user={user}
         meta={`${user?.following} following`}
       />

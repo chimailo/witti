@@ -136,7 +136,13 @@ export default function ChatPage() {
             </Hidden>
             <Grid item sm={6}>
               {user && (
-                <Header title={user.profile.name} meta={user.auth.username} />
+                <Header
+                  avatar
+                  back
+                  title={user.profile.name}
+                  meta={user.auth.username}
+                  user={user}
+                />
               )}
               <Paper square elevation={0} className={classes.paper}>
                 <ErrorBoundary
