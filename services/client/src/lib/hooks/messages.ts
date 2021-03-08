@@ -1,8 +1,8 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { useInfiniteQuery, useMutation, useQueryClient } from 'react-query';
-import { InfiniteMessageResponse, APIError, Message, User } from '../../types';
-import { setAuthToken } from '../axiosConfig';
+import { InfiniteMessageResponse, APIError, Message } from '../../types';
 import { KEYS, REFETCH_INTERVAL } from '../constants';
+import { setAuthToken } from '../axiosConfig';
 
 type Args = {
   pages: InfiniteMessageResponse[];
@@ -16,7 +16,7 @@ export function useInfiniteMessages() {
     KEYS.MESSAGES_KEY,
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfiniteMessageResponse> = await axios.get(
-        `/users/messages?cursor=${pageParam}`
+        `/chats?cursor=${pageParam}`
       );
       return res.data;
     },
@@ -38,7 +38,7 @@ export function useInfiniteChatMessages(username: string) {
       return res.data;
     },
     {
-      refetchInterval: REFETCH_INTERVAL,
+      // refetchInterval: REFETCH_INTERVAL,
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? false,
     }
   );
@@ -119,6 +119,7 @@ export function useDeleteMessage() {
       msg_id,
       userOnly,
     }: {
+      pageIndex: number;
       msg_id: number;
       username?: string;
       userOnly?: boolean;
@@ -126,15 +127,34 @@ export function useDeleteMessage() {
       const res: AxiosResponse<{ message: string }> = await axios.delete(
         `/messages/${msg_id}${userOnly ? '?userOnly=true' : ''}`
       );
-      console.log(res.config);
       return res.data;
     },
     {
+      onMutate: ({ msg_id, pageIndex, username }) => {
+        // @ts-expect-error
+        queryClient.setQueryData<Args>([KEYS.CHAT_KEY, username], (oldData) => {
+          const page = oldData?.pages[pageIndex];
+
+          if (page) {
+            const newPage = page.data.filter(
+              (message) => message.id !== msg_id
+            );
+            console.log(newPage);
+
+            oldData?.pages.splice(pageIndex, 1, {
+              data: newPage,
+              nextCursor: page?.nextCursor,
+            });
+          }
+          console.log(oldData);
+          return oldData;
+        });
+      },
       onError: (error: AxiosError<APIError>) => {
         console.log('Error: ', error.response?.data.message);
         // to error reporting service
       },
-      onSuccess: (_, { username }) => {
+      onSettled: (_d, _e, { username }) => {
         queryClient.invalidateQueries([KEYS.CHAT_KEY, username]);
         queryClient.invalidateQueries(KEYS.MESSAGES_KEY);
       },

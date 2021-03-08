@@ -5,6 +5,8 @@ const AUTH = 'auth';
 const USER = 'user';
 const FEED = 'feed';
 const CHAT_KEY = 'chat';
+const NOTIFS = 'notifs';
+const NOTIFS_COUNT = 'notifs_count';
 const MESSAGES_KEY = 'messages';
 const CREATE_POST = 'create-post';
 
@@ -13,7 +15,9 @@ export const KEYS = {
   AUTH,
   USER,
   FEED,
+  NOTIFS,
   CREATE_POST,
+  NOTIFS_COUNT,
   MESSAGES_KEY,
 };
 
@@ -27,7 +31,7 @@ const HOME = '/home';
 const EXPLORE = '/explore';
 const NOTIFICATIONS = '/notifications';
 const MESSAGES = '/messages';
-const CHAT = '/messages/:username';
+const CHAT = '/chats/:username';
 
 const PROFILE = '/:username/profile';
 const REPLIES = '/:username/replies';

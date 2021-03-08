@@ -59,7 +59,7 @@ def create_app(config=app_settings):
     from src.blueprints.users.models import User
     from src.blueprints.profiles.models import Profile
     from src.blueprints.posts.models import Post
-    from src.blueprints.messages.models import Message, Conversation
+    from src.blueprints.messages.models import Message, Chat
     from src.blueprints.admin.models import Group, Permission, Model
 
     @app.shell_context_processor
@@ -73,7 +73,7 @@ def create_app(config=app_settings):
             "Profile": Profile,
             "Post": Post,
             "Message": Message,
-            "Conversation": Conversation,
+            "Chat": Chat,
             "Group": Group,
             "Permission": Permission,
             "Model": Model,

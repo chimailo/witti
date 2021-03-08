@@ -112,7 +112,7 @@ export default function PostPage() {
 
   return (
     <>
-      <Header title='Post' user={user} />
+      <Header back title='Post' user={user} />
       <Paper
         elevation={0}
         component='article'

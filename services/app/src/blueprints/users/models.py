@@ -7,9 +7,9 @@ from sqlalchemy.orm import aliased
 from src import db
 from src.utils.models import ResourceMixin
 from src.blueprints.posts.models import Post
-from src.blueprints.messages.models import Message, Conversation, \
-    LastReadMessage
 from src.blueprints.admin.models import Permission
+from src.blueprints.messages.models import Message, Chat, \
+    LastReadMessage, Notification
 
 
 user_perms = db.Table(
@@ -92,17 +92,21 @@ class User(db.Model, ResourceMixin):
     )
     posts = db.relationship(
         'Post', backref='author', cascade='all, delete-orphan')
-    # Messages
-    # notifications = db.relationship('Notification', backref='user')
-    # last_message_read_time = db.Column(db.DateTime)
-    conversation1 = db.relationship(
-        'Conversation', foreign_keys='Conversation.user1_id',
+    chat1 = db.relationship(
+        'Chat', foreign_keys='Chat.user1_id',
         backref='user1', cascade='all, delete-orphan')
-    conversation2 = db.relationship(
-        'Conversation', foreign_keys='Conversation.user2_id',
+    chat2 = db.relationship(
+        'Chat', foreign_keys='Chat.user2_id',
         backref='user2', cascade='all, delete-orphan')
     deleted_messages = db.relationship(
         'Message', secondary=deleted_msgs, lazy='dynamic')
+    last_notif_read_time = db.Column(db.DateTime, default=datetime.utcnow)
+    notifications = db.relationship(
+        'Notification',
+        backref='user',
+        cascade='all, delete-orphan',
+        foreign_keys='Notification.doer_id'
+    )
     permissions = db.relationship(
         'Permission',
         secondary=user_perms,
@@ -152,42 +156,53 @@ class User(db.Model, ResourceMixin):
             user_id=self.id).filter(Post.comment_id.is_(None))
         return followed_users_posts.union(own_posts)
 
-    def get_conversation(self, user):
-        '''Get conversation between user?'''
-        return Conversation.query.filter(and_(
-            Conversation.user1_id == self.id,
-            Conversation.user2_id == user.id) | and_(
-                    Conversation.user1_id == user.id,
-                    Conversation.user2_id == self.id)).first()
+    def add_notification(self, subject, item_id, id, **kwargs):
+        notif = Notification(
+            subject=subject, item_id=item_id, user_id=id, doer_id=self.
+            id, **kwargs)
+        db.session.add(notif)
+        return notif
 
-    def get_messages_in_conv(self, user):
+    def get_notifications(self):
+        return Notification.query.filter_by(user_id=self.id).order_by(
+            Notification.timestamp.desc())
+
+    def get_chat(self, user):
+        '''Get chat between user?'''
+        return Chat.query.filter(
+            and_(Chat.user1_id == self.id, Chat.user2_id == user.id) |
+            and_(Chat.user1_id == user.id, Chat.user2_id == self.id)).first()
+
+    def get_chat_messages(self, user):
         '''Get all the messages in a conversation between two users'''
-        return db.session.query(Message).join(Conversation.messages).filter(and_(Conversation.user1_id == self.id,Conversation.user2_id == user.id) |and_(Conversation.user1_id == user.id,Conversation.user2_id == self.id)).except_(
+        return Message.query.join(Chat.messages).filter(
+            and_(Chat.user1_id == self.id, Chat.user2_id == user.id) |
+            and_(Chat.user1_id == user.id, Chat.user2_id == self.id)).except_(
                     self.deleted_messages).order_by(Message.created_on.desc())
 
-    def get_last_messages_in_conv(self):
-        '''Get the last messages in all conversations with self.'''
+    def get_chat_last_messages(self):
+        '''Get the last messages in all chats with self.'''
         user1 = aliased(User)
         user2 = aliased(User)
-        # get the last message in all conversations.
-        last_msgs = db.session.query(Message.conversation_id, func.max(
+        # get the last message in all chats.
+        last_msgs = db.session.query(Message.chat_id, func.max(
             Message.created_on).label('last_messages')).group_by(
-                Message.conversation_id).subquery()
+                Message.chat_id).subquery()
         # return the users and messages involved in the conversation with self
         return last_msgs, db.session.query(
             Message, user1, user2, last_msgs.c.last_messages).join(
             last_msgs, Message.created_on == last_msgs.c.last_messages).join(
-                Conversation, Conversation.id == Message.conversation_id).join(
-                    user1, user1.id == Conversation.user1_id).join(
-                        user2, user2.id == Conversation.user2_id).filter((
-                            Conversation.user1_id == self.id) | (
-                                Conversation.user2_id == self.id)).order_by(
+                Chat, Chat.id == Message.chat_id).join(
+                    user1, user1.id == Chat.user1_id).join(
+                        user2, user2.id == Chat.user2_id).filter((
+                            Chat.user1_id == self.id) | (
+                                Chat.user2_id == self.id)).order_by(
                                     last_msgs.c.last_messages.desc())
 
-    def last_read_msg_ts(self, conv_id):
+    def last_read_msg_ts(self, chat_id):
         return LastReadMessage.query.filter(and_(
             LastReadMessage.user_id == self.id,
-            LastReadMessage.conversation_id == conv_id)).first()
+            LastReadMessage.chat_id == chat_id)).first()
 
     def delete_message_for_me(self, message):
         self.deleted_messages.append(message)

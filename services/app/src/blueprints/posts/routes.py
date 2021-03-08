@@ -1,4 +1,3 @@
-from pprint import pprint
 from sqlalchemy import exc
 from sqlalchemy.sql import func
 from flask import json, url_for, request, jsonify, Blueprint, current_app
@@ -8,6 +7,7 @@ from src.utils import urlsafe_base64
 from src.utils.decorators import authenticate
 from src.blueprints.errors import server_error, bad_request, not_found, \
     error_response
+from src.blueprints.messages.models import Notification
 from src.blueprints.posts.models import Post
 from src.blueprints.posts.schema import PostSchema
 
@@ -91,9 +91,6 @@ def posts_feed(user):
                 if feed == 'latest' else urlsafe_base64(
             str(query[items_per_page - 1][1]))
 
-    pprint(query[0][0].comments)
-    pprint(query[0][0].id)
-
     return {
         'data': [post[0].to_dict(user) for post in query[:items_per_page]],
         'nextCursor': nextCursor
@@ -113,9 +110,20 @@ def create_post(user, post_id=None):
     post = Post()
     post.body = json.dumps(req_data.get('body'))
     post.user_id = user.id
+    db.session.add(post)
 
     if post_id:
         post.comment_id = post_id
+        parent = Post.find_by_id(post_id)
+        db.session.add(
+            user.add_notification(
+                subject='comment', item_id=post.id, id=parent.author.id, post_id=parent.id))
+    else:
+        post_notifs = []
+        for u in user.followers.all():
+            post_notifs.append(user.add_notification(
+                    subject='post', item_id=post.id, id=u.id, post_id=post.id))
+        db.session.add_all(post_notifs)
 
     try:
         post.save()
@@ -141,6 +149,13 @@ def delete_post(user, post_id):
     if post.user_id != user.id:
         return error_response(401, "You cannot delete someone else's post.")
 
+    post_notif = Notification.find_by_attr(subject='post', item_id=post.id)
+    comment_notif = Notification.find_by_attr(
+        subject='comment', item_id=post.id)
+
+    [db.session.delete(notif) for notif in post_notif] if post_notif \
+        else db.session.delete(comment_notif)
+
     try:
         post.delete()
     except (exc.IntegrityError, ValueError):
@@ -161,8 +176,12 @@ def update_like(user, post_id):
     try:
         if post.is_liked_by(user):
             post.likes.remove(user)
+            db.session.delete(
+                Notification.find_by_attr(subject='like', item_id=post.id))
         else:
             post.likes.append(user)
+            db.session.add(user.add_notification(
+                'like', item_id=post.id, id=post.author.id, post_id=post.id))
 
         post.save()
     except (exc.IntegrityError, ValueError):

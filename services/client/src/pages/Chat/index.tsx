@@ -106,7 +106,7 @@ export default function ChatPage() {
         <div className={classes.main}>
           <Grid container spacing={1}>
             <Hidden smDown>
-              <Grid item sm={6}>
+              <Grid item xs={12} md={6}>
                 <Header title='Messages' />
                 <ErrorBoundary
                   onReset={reset}
@@ -134,7 +134,7 @@ export default function ChatPage() {
                 </ErrorBoundary>
               </Grid>
             </Hidden>
-            <Grid item sm={6}>
+            <Grid item xs={12} md={6}>
               {user && (
                 <Header
                   avatar
@@ -171,6 +171,7 @@ export default function ChatPage() {
                             <Fragment key={idx}>
                               <Chat
                                 message={message}
+                                pageIndex={i}
                                 username={user?.auth.username}
                               />
                             </Fragment>

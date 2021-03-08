@@ -14,8 +14,7 @@ from src.blueprints.users.models import User
 from src.blueprints.auth.models import Auth
 from src.blueprints.profiles.models import Profile
 from src.blueprints.posts.models import Post
-from src.blueprints.messages.models import Message, Conversation, \
-    LastReadMessage
+from src.blueprints.messages.models import Message, Chat, LastReadMessage
 from src.blueprints.admin.models import Group
 from src.blueprints.admin.models import Permission
 from src.blueprints.admin.models import grp_members, grp_perms
@@ -295,38 +294,33 @@ def seed_comments(num_of_comments):
 # @cli.command()
 def seed_conversations():
     users = User.query.all()
-    conversations = []
-    print('Setting up conversations...')
+    chats = []
+    print('Setting up chats...')
 
     for user in users:
         sample = random.sample(
             user.followed.all(), k=(random.randrange(10, 15)))
 
         for u in sample:
-            conv = Conversation.query.filter(
-                and_(
-                    Conversation.user1_id == user.id,
-                    Conversation.user2_id == u.id) |
-                and_(
-                    Conversation.user1_id == u.id,
-                    Conversation.user2_id == user.id)
-            ).first()
+            chat = Chat.query.filter(
+                and_(Chat.user1_id == user.id, Chat.user2_id == u.id) |
+                and_(Chat.user1_id == u.id, Chat.user2_id == user.id)).first()
 
-            if conv:
+            if chat:
                 continue
 
-            conv = Conversation(user1_id=user.id, user2_id=u.id)
-            conversations.append(conv)
+            chat = Chat(user1_id=user.id, user2_id=u.id)
+            chats.append(chat)
     print('Saving to database...')
-    db.session.add_all(conversations)
+    db.session.add_all(chats)
     db.session.commit()
 
 
-@cli.command()
+# @cli.command()
 def seed_messages():
     db.session.query(Message).delete()
     db.session.query(LastReadMessage).delete()
-    convs = Conversation.query.all()
+    chats = Chat.query.all()
     messages = []
     lr_msgs = []
 
@@ -337,7 +331,7 @@ def seed_messages():
     except Exception as error:
         print(f'Error: {error}')
 
-    for c in convs:
+    for c in chats:
         sample = random.sample(msgs, k=random.randrange(3, 8))
 
         for msg in sample:
@@ -345,7 +339,7 @@ def seed_messages():
             message = Message(author_id=author, body=msg["title"])
             message.created_on = random_timestamp(
                 datetime(2021, 1, 12), datetime(2021, 2, 11))
-            message.conversation_id = c.id
+            message.chat_id = c.id
             messages.append(message)
 
             id = random.choice(
@@ -359,14 +353,14 @@ def seed_messages():
             lrm = LastReadMessage.query.filter(
                 and_(
                     LastReadMessage.user_id == author,
-                    LastReadMessage.conversation_id == c.id)
+                    LastReadMessage.chat_id == c.id)
                 ).first()
 
             if lrm:
                 lrm.timestamp = random_timestamp(
                     datetime(2021, 1, 12), datetime(2021, 2, 1))
             else:
-                lrm = LastReadMessage(user_id=author, conversation_id=c.id)
+                lrm = LastReadMessage(user_id=author, chat_id=c.id)
                 lrm.timestamp = random_timestamp(
                     datetime(2021, 1, 12), datetime(2021, 2, 1))
             lr_msgs.append(lrm)

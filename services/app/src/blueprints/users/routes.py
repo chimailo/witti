@@ -8,9 +8,9 @@ from src.blueprints.errors import server_error, not_found
 from src.blueprints.users.models import User
 from src.blueprints.auth.models import Auth
 from src.blueprints.posts.models import Post
+from src.blueprints.messages.models import Notification
 from src.blueprints.users.schema import UserSchema
 from src.blueprints.posts.schema import PostSchema
-from src.blueprints.messages.schema import MessageSchema
 
 
 users = Blueprint('users', __name__, url_prefix='/api/users')
@@ -30,6 +30,10 @@ def follow(user, id):
         return not_found('User not found')
 
     user.follow(to_follow)
+
+    db.session.add(
+        user.add_notification(
+            subject='follow', item_id=user.id, id=to_follow.id))
 
     try:
         user.save()
@@ -52,6 +56,8 @@ def unfollow(user, id):
         return not_found('User not found')
 
     user.unfollow(followed)
+    db.session.delete(
+        Notification.find_by_attr(subject='follow', item_id=user.id))
 
     try:
         user.save()
@@ -166,17 +172,23 @@ def get_user_posts(user, username):
 
     cursor = request.args.get('cursor')
     items_per_page = current_app.config['ITEMS_PER_PAGE']
-    query = Post.query.with_parent(a_user).filter(
-        Post.comment_id.is_(None)).order_by(Post.created_on.desc())
     nextCursor = None
     posts = None
 
-    if cursor == '0':
-        posts = query.limit(items_per_page + 1).all()
-    else:
-        cursor = urlsafe_base64(cursor, from_base64=True)
-        posts = query.filter(
-            Post.created_on < cursor).limit(items_per_page + 1).all()
+    try:
+        query = Post.query.with_parent(a_user).filter(
+            Post.comment_id.is_(None)).order_by(Post.created_on.desc())
+
+        if cursor == '0':
+            posts = query.limit(items_per_page + 1).all()
+        else:
+            cursor = urlsafe_base64(cursor, from_base64=True)
+            posts = query.filter(
+                Post.created_on < cursor).limit(items_per_page + 1).all()
+    except (exc.IntegrityError, ValueError) as e:
+        db.session.rollback()
+        print(e)
+        return server_error('Something went wrong, please try again.')
 
     if len(posts) > items_per_page:
         nextCursor = urlsafe_base64(
@@ -200,17 +212,23 @@ def get_user_comments(user, username):
 
     cursor = request.args.get('cursor')
     items_per_page = current_app.config['ITEMS_PER_PAGE']
-    query = Post.query.with_parent(a_user).filter(
-        Post.comment_id.isnot(None)).order_by(Post.created_on.desc())
     nextCursor = None
     comments = None
 
-    if cursor == '0':
-        comments = query.limit(items_per_page + 1).all()
-    else:
-        cursor = urlsafe_base64(cursor, from_base64=True)
-        comments = query.filter(
-            Post.created_on < cursor).limit(items_per_page + 1).all()
+    try:
+        query = Post.query.with_parent(a_user).filter(
+            Post.comment_id.isnot(None)).order_by(Post.created_on.desc())
+
+        if cursor == '0':
+            comments = query.limit(items_per_page + 1).all()
+        else:
+            cursor = urlsafe_base64(cursor, from_base64=True)
+            comments = query.filter(
+                Post.created_on < cursor).limit(items_per_page + 1).all()
+    except (exc.IntegrityError, ValueError) as e:
+        db.session.rollback()
+        print(e)
+        return server_error('Something went wrong, please try again.')
 
     if len(comments) > items_per_page:
         nextCursor = urlsafe_base64(
@@ -241,16 +259,21 @@ def get_liked_posts(user, username):
 
     cursor = request.args.get('cursor')
     items_per_page = current_app.config['ITEMS_PER_PAGE']
-    query = a_user.likes.order_by(Post.created_on.desc())
     nextCursor = None
     posts = None
 
-    if cursor == '0':
-        posts = query.limit(items_per_page + 1).all()
-    else:
-        cursor = urlsafe_base64(cursor, from_base64=True)
-        posts = query.filter(
-            Post.created_on < cursor).limit(items_per_page + 1).all()
+    try:
+        query = a_user.likes.order_by(Post.created_on.desc())
+        if cursor == '0':
+            posts = query.limit(items_per_page + 1).all()
+        else:
+            cursor = urlsafe_base64(cursor, from_base64=True)
+            posts = query.filter(
+                Post.created_on < cursor).limit(items_per_page + 1).all()
+    except (exc.IntegrityError, ValueError) as e:
+        db.session.rollback()
+        print(e)
+        return server_error('Something went wrong, please try again.')
 
     if len(posts) > items_per_page:
         nextCursor = urlsafe_base64(
@@ -269,45 +292,4 @@ def get_liked_posts(user, username):
         'data': liked_posts,
         'nextCursor': nextCursor,
         'total': query.count(),
-    }
-
-
-@users.route('/messages', methods=['GET'])
-@authenticate
-def get_messages(user):
-    cursor = request.args.get('cursor')
-    items_per_page = current_app.config['ITEMS_PER_PAGE']
-    stmt, query = user.get_last_messages_in_conv()
-    last_messages = None
-    nextCursor = None
-    messages = []
-
-    if cursor == '0':
-        last_messages = query.limit(items_per_page + 1).all()
-    else:
-        cursor = urlsafe_base64(cursor, from_base64=True)
-        last_messages = query.filter(
-            stmt.c.last_messages < cursor).limit(items_per_page + 1).all()
-
-    if len(last_messages) > items_per_page:
-        nextCursor = urlsafe_base64(
-            last_messages[items_per_page - 1].last_messages.isoformat())
-
-    for msg, user1, user2, _ in last_messages[:items_per_page]:
-        author = user2 if user.id == user1.id else user1
-        last_read_msg = user.last_read_msg_ts(msg.conversation_id)
-        message = MessageSchema(exclude=('author_id',)).dump(msg)
-        message['isRead'] = False if not last_read_msg else \
-            last_read_msg.timestamp >= msg.created_on
-        message['user'] = {
-            'id': author.id,
-            'username': author.auth.username,
-            'name': author.profile.name,
-            'avatar': author.profile.avatar
-        }
-        messages.append(message)
-
-    return {
-        'data': messages,
-        'nextCursor': nextCursor,
     }

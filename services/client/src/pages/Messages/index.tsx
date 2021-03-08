@@ -67,7 +67,7 @@ export default function Message() {
       <div className={classes.main}>
         <Grid container spacing={1}>
           <Grid item xs={12} md={6}>
-            <Header title='Messages' />
+            <Header title='Messages' back />
             <ErrorBoundary
               onReset={reset}
               fallbackRender={({ resetErrorBoundary }) => (

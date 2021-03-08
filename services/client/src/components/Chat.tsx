@@ -50,10 +50,12 @@ const useStyles = makeStyles((theme: Theme) =>
 
 export function Chat({
   message,
+  pageIndex,
   username,
 }: {
   message: Message;
   username?: string;
+  pageIndex: number;
 }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const classes = useStyles();
@@ -63,7 +65,7 @@ export function Chat({
 
   return (
     <>
-      <Box my={2}>
+      <Box my={1}>
         {message.author_id === auth?.id ? (
           <Box
             display='flex'
@@ -138,10 +140,15 @@ export function Chat({
         anchorEl={anchorEl}
         closeMenu={() => setAnchorEl(null)}
         deleteMessage={() =>
-          deleteMessage.mutate({ msg_id: message.id, username })
+          deleteMessage.mutate({ msg_id: message.id, username, pageIndex })
         }
         deleteMessageForUser={() =>
-          deleteMessage.mutate({ msg_id: message.id, username, userOnly: true })
+          deleteMessage.mutate({
+            msg_id: message.id,
+            username,
+            pageIndex,
+            userOnly: true,
+          })
         }
       />
     </>

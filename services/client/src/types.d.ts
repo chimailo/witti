@@ -80,6 +80,15 @@ export type Message = {
   };
 };
 
+export type Notification = {
+  id: number;
+  subject: string;
+  item_id: number;
+  timestamp: string;
+  user: Partial<User>;
+  post?: Pick<Post, 'id' | 'body'>;
+};
+
 export type InfinitePostResponse = {
   data: Post[];
   nextCursor: number;
@@ -94,5 +103,10 @@ export type InfiniteUserResponse = {
 
 export interface InfiniteMessageResponse {
   data: Message[];
+  nextCursor: number;
+}
+
+export interface InfiniteNotificationResponse {
+  data: Notification[];
   nextCursor: number;
 }

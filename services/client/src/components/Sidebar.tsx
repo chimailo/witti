@@ -9,6 +9,7 @@ import { useQueryClient } from 'react-query';
 import PluginEditor from 'draft-js-plugins-editor';
 
 import Avatar from '@material-ui/core/Avatar';
+import Badge from '@material-ui/core/Badge';
 import Divider from '@material-ui/core/Divider';
 import Hidden from '@material-ui/core/Hidden';
 import List from '@material-ui/core/List';
@@ -31,10 +32,11 @@ import {
 } from '@material-ui/core/styles';
 import { Omit } from '@material-ui/types';
 
-import SidebarMenu from './dropdown/Sidebar';
-import Logo from './logo';
 import CreatePostModal from './modals/CreatePost';
+import Logo from './logo';
+import SidebarMenu from './dropdown/Sidebar';
 import { KEYS, ROUTES } from '../lib/constants';
+import { useNotificationCount } from '../lib/hooks/notifs';
 import { User } from '../types';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -127,6 +129,7 @@ export default function Sidebar({ user }: { user?: User }) {
 
   const history = useHistory();
   const queryClient = useQueryClient();
+  const { data: notifs } = useNotificationCount();
 
   const classes = useStyles();
   const theme = useTheme();
@@ -171,7 +174,11 @@ export default function Sidebar({ user }: { user?: User }) {
           primary='Notifications'
           to={ROUTES.NOTIFICATIONS}
           icon={
-            <NotificationsNoneIcon fontSize={matchesXs ? 'default' : 'large'} />
+            <Badge overlap='circle' badgeContent={notifs?.count} color='error'>
+              <NotificationsNoneIcon
+                fontSize={matchesXs ? 'default' : 'large'}
+              />
+            </Badge>
           }
         />
         <ListItemLink
