@@ -15,7 +15,7 @@
 }
 
 .input::placeholder {
-  color: #ddd;
+  color: rgb(153, 153, 153);
 }
 
 .inputInvalid {

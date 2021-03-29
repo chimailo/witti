@@ -9,6 +9,7 @@ import ReplayIcon from '@material-ui/icons/Replay';
 
 import Header from '../../components/Header';
 import LoadMore from '../../components/Loading';
+import Page from '../../components/Page';
 import PostCard from '../../components/cards/PostCard';
 import ProfileCard from '../../components/cards/ProfileCard';
 import ProfileTab from '../../components/tabs/Profile';
@@ -36,7 +37,7 @@ export default function FavoritesTab() {
   });
 
   return (
-    <>
+    <Page>
       <Header
         back
         title={`${user?.profile.name}`}
@@ -98,6 +99,6 @@ export default function FavoritesTab() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </>
+    </Page>
   );
 }

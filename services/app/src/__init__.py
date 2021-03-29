@@ -58,7 +58,7 @@ def create_app(config=app_settings):
     from src.blueprints.auth.models import Auth
     from src.blueprints.users.models import User
     from src.blueprints.profiles.models import Profile
-    from src.blueprints.posts.models import Post
+    from src.blueprints.posts.models import Post, Tag
     from src.blueprints.messages.models import Message, Chat
     from src.blueprints.admin.models import Group, Permission, Model
 
@@ -72,6 +72,7 @@ def create_app(config=app_settings):
             "Auth": Auth,
             "Profile": Profile,
             "Post": Post,
+            "Tag": Tag,
             "Message": Message,
             "Chat": Chat,
             "Group": Group,

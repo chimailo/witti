@@ -9,6 +9,7 @@ import ReplayIcon from '@material-ui/icons/Replay';
 
 import Header from '../../components/Header';
 import LoadMore from '../../components/Loading';
+import Page from '../../components/Page';
 import PostCard from '../../components/cards/PostCard';
 import ProfileCard from '../../components/cards/ProfileCard';
 import ProfileTab from '../../components/tabs/Profile';
@@ -23,13 +24,14 @@ export default function PostTab() {
   const { username } = useParams<{ username: string }>();
   const { data: user } = useUser(username);
   const { reset } = useQueryErrorResetBoundary();
+  const key = `/users/${username}/posts`;
 
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfinitePosts(`/users/${username}/posts`, `/users/${username}/posts?`);
+  } = useInfinitePosts(key, `${key}?`);
 
   useIntersectionObserver({
     enabled: hasNextPage,
@@ -38,7 +40,7 @@ export default function PostTab() {
   });
 
   return (
-    <>
+    <Page key={key}>
       <Header
         back
         title={`${user?.profile.name} `}
@@ -95,6 +97,6 @@ export default function PostTab() {
           />
         </Suspense>
       </ErrorBoundary>
-    </>
+    </Page>
   );
 }

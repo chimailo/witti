@@ -4,14 +4,13 @@ import { ErrorBoundary } from 'react-error-boundary';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
 import ReplayIcon from '@material-ui/icons/Replay';
 
 import Header from '../../components/Header';
 import LoadMore from '../../components/Loading';
+import Page from '../../components/Page';
 import PostCard from '../../components/cards/PostCard';
 import useIntersectionObserver from '../../lib/hooks/useIntersectionObserver';
-import Editor from '../../components/Editor';
 import { CenteredLoading } from '../../components/Loading';
 import { KEYS } from '../../lib/constants';
 import { useInfinitePosts } from '../../lib/hooks/posts';
@@ -19,13 +18,13 @@ import { useInfinitePosts } from '../../lib/hooks/posts';
 export default function Home() {
   const [feed, setFeedType] = useState('latest');
   const loadMoreRef = useRef<HTMLButtonElement>(null);
-
+  const key = feed === 'latest' ? KEYS.HOME_LATEST : KEYS.HOME_TOP;
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfinitePosts(KEYS.FEED, `/posts?feed=${feed}`);
+  } = useInfinitePosts(key, `/posts?feed=${feed}`);
 
   useIntersectionObserver({
     enabled: hasNextPage,
@@ -38,11 +37,8 @@ export default function Home() {
   };
 
   return (
-    <>
+    <Page key={key}>
       <Header title='home' feed={feed} handleFeedChange={handleFeedChange} />
-      <Paper elevation={0} component='form' style={{ marginTop: 4 }}>
-        <Editor cacheKey={KEYS.FEED} />
-      </Paper>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary
@@ -68,7 +64,7 @@ export default function Home() {
                 <Fragment key={i}>
                   {page.data.map((post, idx) => (
                     <Fragment key={idx}>
-                      <PostCard post={post} page={i} cacheKey={KEYS.FEED} />
+                      <PostCard post={post} page={i} cacheKey={key} />
                     </Fragment>
                   ))}
                 </Fragment>
@@ -87,6 +83,6 @@ export default function Home() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </>
+    </Page>
   );
 }

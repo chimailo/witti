@@ -12,7 +12,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles, createStyles, Theme } from '@material-ui/core';
 
-import Logo from '../../components/logo';
+import Logo from '../../components/svg/logo';
 import { CenteredLoading } from '../../components/Loading';
 import { ROUTES } from '../../lib/constants';
 import {

@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react';
 import { Link as RouterLink, useHistory } from 'react-router-dom';
+import { useQuery } from 'react-query';
+import axios, { AxiosResponse } from 'axios';
 
 import AppBar from '@material-ui/core/AppBar';
-import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
+import SwipeableViews from 'react-swipeable-views';
 import Toolbar from '@material-ui/core/Toolbar';
-import FormatQuoteRoundedIcon from '@material-ui/icons/FormatQuoteRounded';
+import { autoPlay } from 'react-swipeable-views-utils';
 import {
   makeStyles,
   Theme,
@@ -15,12 +17,17 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  SvgIcon,
+  Box,
 } from '@material-ui/core';
+
 import hero from '../../static/images/hero1.jpg';
-import Logo from '../../components/logo';
+import Logo from '../../components/svg/logo';
 import { CenteredLoading } from '../../components/Loading';
 import { ROUTES } from '../../lib/constants';
 import { useAuth } from '../../lib/hooks/auth';
+import { Post } from '../../types';
+import { QuoteIcon } from '../../components/svg';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -56,31 +63,21 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     margin: {
       [theme.breakpoints.up('sm')]: {
-        margin: theme.spacing(1),
+        margin: theme.spacing(0, 1),
       },
     },
     main: {
-      textAlign: 'center',
+      display: 'flex',
       justifyContent: 'center',
-      padding: theme.spacing(0, 2),
-    },
-    color: {
-      color: theme.palette.background.paper,
+      flexDirection: 'column',
     },
     sample: {
       width: '100%',
+      minHeight: 120,
+      display: 'flex',
       alignItems: 'center',
       backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      padding: theme.spacing(2, 0),
-      marginTop: theme.spacing(8),
-    },
-    sampleText: {
-      padding: theme.spacing(0, 1),
-      color: theme.palette.grey[300],
-      [theme.breakpoints.up('md')]: {
-        maxWidth: '75%',
-        margin: 'auto',
-      },
+      padding: theme.spacing(3, 0),
     },
   })
 );
@@ -92,6 +89,14 @@ export default function Landing() {
   const history = useHistory();
   const { data, status } = useAuth();
   const loggedIn = data && localStorage.getItem('token');
+
+  const { data: posts, isLoading, isError } = useQuery(
+    'featured-posts',
+    async () => {
+      const res: AxiosResponse<Post[]> = await axios.get(`/posts/featured`);
+      return res.data;
+    }
+  );
 
   useEffect(() => {
     if (loggedIn) {
@@ -111,7 +116,7 @@ export default function Landing() {
             <img src={hero} alt='Logo' className={classes.image} />
           </div>
           <AppBar color='transparent' elevation={0}>
-            <Container maxWidth='lg'>
+            <Container maxWidth='md'>
               <Toolbar
                 component='nav'
                 disableGutters
@@ -140,20 +145,19 @@ export default function Landing() {
               </Toolbar>
             </Container>
           </AppBar>
-          <Grid container justify='center'>
-            <Grid
-              item
-              xs={12}
-              sm={10}
-              md={8}
-              component='main'
-              className={classes.main}
-            >
+          <Box
+            height={400}
+            component='main'
+            display='flex'
+            flexDirection='column'
+            justifyContent='space-between'
+          >
+            <Container maxWidth='sm' className={classes.main}>
               <Typography
                 align='center'
                 variant={matchesXs ? 'h4' : 'h3'}
                 component='h1'
-                className={classes.color}
+                color='secondary'
                 gutterBottom
               >
                 Want to see something funny?
@@ -161,10 +165,10 @@ export default function Landing() {
               <Typography
                 component='h6'
                 align='center'
-                className={classes.color}
+                color='secondary'
                 paragraph
               >
-                Join millions of others and share your funny moments.
+                Join in the fun and share your funny moments.
               </Typography>
               <Button
                 size='large'
@@ -172,35 +176,77 @@ export default function Landing() {
                 color='primary'
                 component={RouterLink}
                 to={ROUTES.SIGNUP}
+                style={{ margin: 'auto' }}
               >
                 Join for free.
               </Button>
-            </Grid>
-            <Grid item xs={12}>
-              <section className={classes.sample}>
-                <Typography
-                  component='p'
-                  align='center'
-                  className={classes.sampleText}
-                >
-                  <FormatQuoteRoundedIcon />
-                  Nostradamus real name was Nostrildamus but he changed it at
-                  the age of 42 after no one was taking him seriously
-                  <FormatQuoteRoundedIcon />
-                </Typography>
-                <Typography
-                  variant='subtitle2'
-                  align='center'
-                  component='p'
-                  className={classes.sampleText}
-                >
-                  Skynet Jr.
-                </Typography>
-              </section>
-            </Grid>
-          </Grid>
+            </Container>
+            <section className={classes.sample}>
+              <Container maxWidth='sm'>
+                {isLoading && <CenteredLoading />}
+                {isError && (
+                  <Typography component='p' align='center'>
+                    An error occured
+                  </Typography>
+                )}
+                {posts && <FeaturedPostsCarousel posts={posts} />}
+              </Container>
+            </section>
+          </Box>
         </div>
       )}
     </>
+  );
+}
+
+const AutoPlaySwipeableViews = autoPlay(SwipeableViews);
+
+function FeaturedPostsCarousel({ posts }: { posts: Post[] }) {
+  const [activePost, setActivePost] = React.useState(0);
+  const classes = useStyles();
+  const theme = useTheme();
+  const handleStepChange = (step: number) => {
+    setActivePost(step);
+  };
+
+  return (
+    <AutoPlaySwipeableViews
+      enableMouseEvents
+      axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
+      index={activePost}
+      onChangeIndex={handleStepChange}
+      interval={7000}
+    >
+      {posts.map((post) => (
+        <>
+          <Typography
+            color='secondary'
+            component='p'
+            align='center'
+            paragraph
+            style={{ padding: theme.spacing(0, 2) }}
+          >
+            <SvgIcon
+              component={QuoteIcon}
+              viewBox='0 0 508 508'
+              color='secondary'
+              fontSize='small'
+              style={{
+                marginRight: theme.spacing(2),
+              }}
+            />
+            {post.body}
+          </Typography>
+          <Typography
+            variant='subtitle2'
+            align='right'
+            color='secondary'
+            component='p'
+          >
+            - {post.author.username}
+          </Typography>
+        </>
+      ))}
+    </AutoPlaySwipeableViews>
   );
 }

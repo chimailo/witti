@@ -11,6 +11,7 @@ import ReplayIcon from '@material-ui/icons/Replay';
 import Header from '../../components/Header';
 import LoadMore from '../../components/Loading';
 import NotificationCard from '../../components/NotifCard';
+import Page from '../../components/Page';
 import useIntersectionObserver from '../../lib/hooks/useIntersectionObserver';
 import { CenteredLoading } from '../../components/Loading';
 import { useInfiniteNotifications } from '../../lib/hooks/notifs';
@@ -41,7 +42,7 @@ export default function Messages() {
   });
 
   return (
-    <>
+    <Page>
       <Header title='Notifications' back />
       <QueryErrorResetBoundary>
         {({ reset }) => (
@@ -91,6 +92,6 @@ export default function Messages() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </>
+    </Page>
   );
 }

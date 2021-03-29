@@ -5,9 +5,8 @@ import {
   useQuery,
   useQueryClient,
 } from 'react-query';
-import { KEYS } from '../constants';
 import { setAuthToken } from '../../lib/axiosConfig';
-import { APIError, User, InfinitePostResponse, Post } from '../../types';
+import { APIError, User, InfinitePostResponse, Post, Tag } from '../../types';
 
 type Args = {
   pages: InfinitePostResponse[];
@@ -45,12 +44,12 @@ export function useCreatePost() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    async ({ body }: { body: string; author?: User; key: string }) => {
-      const res: AxiosResponse<Post> = await axios.post(`/posts`, { body });
+    async ({ post }: { post: string; author?: User; key?: string }) => {
+      const res: AxiosResponse<Post> = await axios.post(`/posts`, { post });
       return res.data;
     },
     {
-      onMutate: ({ body, author, key }) => {
+      onMutate: ({ post, author, key }) => {
         // @ts-expect-error
         queryClient.setQueryData<Args>(key, (oldData) => ({
           pageParams: oldData?.pageParams,
@@ -61,7 +60,7 @@ export function useCreatePost() {
                 data: [
                   {
                     id: new Date().getTime(),
-                    body,
+                    post: JSON.parse(post).body,
                     comments: 0,
                     likes: 0,
                     isLiked: false,
@@ -91,7 +90,7 @@ export function useCreatePost() {
         console.log('Error: ', error.message);
         // to error reporting service
       },
-      onSettled: () => queryClient.invalidateQueries(KEYS.FEED),
+      onSettled: () => queryClient.invalidateQueries(),
     }
   );
 }
@@ -101,18 +100,11 @@ export function useCreateComment() {
   const queryClient = useQueryClient();
 
   return useMutation(
-    async ({
-      body,
-      post_id,
-    }: {
-      key: string;
-      body: string;
-      post_id: number;
-    }) => {
+    async ({ post, post_id }: { post: string; post_id: number }) => {
       const res: AxiosResponse<Post> = await axios.post(
         `/posts/${post_id}/comments`,
         {
-          body,
+          post,
         }
       );
       return res.data;
@@ -196,6 +188,44 @@ export function useUpdatePostLike() {
         // to error reporting service
       },
       onSettled: () => queryClient.invalidateQueries(),
+    }
+  );
+}
+
+export function useTags() {
+  localStorage.token && setAuthToken(localStorage.token);
+
+  return useQuery<Tag[], AxiosError<APIError>>(`tags`, async () => {
+    const res: AxiosResponse<Tag[]> = await axios.get(`/tags`);
+    return res.data;
+  });
+}
+
+export function useAddTag() {
+  localStorage.token && setAuthToken(localStorage.token);
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    async (tag: string) => {
+      const res: AxiosResponse<Tag> = await axios.post(`/tags`, {
+        name: tag,
+      });
+      return res.data;
+    },
+    {
+      onMutate: (tag) => {
+        queryClient.setQueryData<Tag[]>(
+          `tags`,
+          // @ts-expect-error
+          (oldData) =>
+            oldData && [{ id: new Date().getTime(), name: tag }, ...oldData]
+        );
+      },
+      onError: (error: AxiosError<APIError>) => {
+        console.error('Error: ', error.response?.data);
+        // to error reporting service
+      },
+      onSettled: () => queryClient.invalidateQueries(`tags`),
     }
   );
 }

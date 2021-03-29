@@ -13,7 +13,7 @@ from src.utils.perms import set_model_perms
 from src.blueprints.users.models import User
 from src.blueprints.auth.models import Auth
 from src.blueprints.profiles.models import Profile
-from src.blueprints.posts.models import Post
+from src.blueprints.posts.models import Post, Tag
 from src.blueprints.messages.models import Message, Chat, LastReadMessage
 from src.blueprints.admin.models import Group
 from src.blueprints.admin.models import Permission
@@ -195,13 +195,14 @@ def seed_users(num_of_users):
         print(f'Error: {error}')
 
 
-# @seed.command()
+# @cli.command()
 def seed_posts(num_of_posts):
     """Seed the database with some posts."""
     users = User.query.all()
     posts1 = []
     posts2 = []
     post_objs = []
+    tag_list = ['safe', 'broad', 'witty', 'humorous']
 
     print('Fetching posts...')
 
@@ -215,44 +216,72 @@ def seed_posts(num_of_posts):
                 blacklistFlags=nsfw,racist,sexist&type=twopart&amount=10',
             headers={'accept': 'application/json'}).json().get('jokes'))
 
-    try:
-        print('Saving posts to database...')
-        for p in posts1:
-            user = random.choice(users)
+    # try:
+    print('Saving posts to database...')
+    for p in posts1:
+        user = random.choice(users)
 
-            # tag = p.get('type')
-            body = f"{p.get('setup')} - {p.get('punchline')}"
+        tag = p.get('type')
+        tags = [tag, random.choice(tag_list)]
+        body = f"{p.get('setup')} - {p.get('punchline')}"
 
-            post = Post()
-            post.body = body
-            post.user_id = user.id
+        post = Post()
+        post.body = body
+        post.user_id = user.id
 
-            post.likes.extend(random.sample(users, k=random.randrange(36)))
-            post.created_on = random_timestamp(
-                datetime(2020, 7, 1), datetime(2020, 9, 28))
-            post_objs.append(post)
+        post.likes.extend(random.sample(users, k=random.randrange(36)))
+        post.created_on = random_timestamp(
+            datetime(2020, 7, 1), datetime(2020, 9, 28))
 
-        for p in posts2:
-            user = random.choice(users)
+        for t in tags:
+            tag = Tag.query.filter_by(name=t).first()
 
-            # tag = p.get('category').lower()
-            body = f"{p.get('setup')} - {p.get('delivery')}"
+            if tag:
+                post.tags.append(tag)
+            else:
+                tag = Tag(name=t)
+                db.session.add(tag)
+                post.tags.append(tag)
 
-            post = Post()
-            post.body = body
-            post.user_id = user.id
+        post_objs.append(post)
 
-            post.created_on = random_timestamp(
-                datetime(2020, 9, 1), datetime(2020, 12, 31))
-            post.likes.extend(random.sample(users, k=random.randrange(30)))
-            post_objs.append(post)
+    for p in posts2:
+        user = random.choice(users)
 
-        db.session.add_all(post_objs)
-        db.session.commit()
+        tag = p.get('category').lower()
+        flags = p.get('flags')
+        tags = [key.lower() for key in flags if flags[key] is True]
+        tags.append(tag)
+        if bool(p.get('safe')):
+            tags.append('safe')
 
-        print(f'Post table seeded with {num_of_posts} posts...')
-    except Exception as error:
-        print(f'Error: {error}')
+        body = f"{p.get('setup')} - {p.get('delivery')}"
+
+        post = Post()
+        post.body = body
+        post.user_id = user.id
+        post.created_on = random_timestamp(
+            datetime(2020, 9, 1), datetime(2020, 12, 31))
+        post.likes.extend(random.sample(users, k=random.randrange(30)))
+
+        for t in tags:
+            tag = Tag.query.filter_by(name=t).first()
+
+            if tag:
+                post.tags.append(tag)
+            else:
+                tag = Tag(name=t)
+                db.session.add(tag)
+                post.tags.append(tag)
+
+        post_objs.append(post)
+
+    db.session.add_all(post_objs)
+    db.session.commit()
+
+    print(f'Post table seeded with {num_of_posts} posts...')
+    # except Exception as error:
+    #     print(f'Error: {error}')
 
 
 # @seed.command()

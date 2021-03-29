@@ -10,6 +10,7 @@ import ReplayIcon from '@material-ui/icons/Replay';
 import FollowTab from '../../components/tabs/Follow';
 import Header from '../../components/Header';
 import LoadMore from '../../components/Loading';
+import Page from '../../components/Page';
 import ProfileCard from '../../components/cards/ProfileCard';
 import useIntersectionObserver from '../../lib/hooks/useIntersectionObserver';
 import { CenteredLoading } from '../../components/Loading';
@@ -33,7 +34,7 @@ export default function FollowersTab() {
   });
 
   return (
-    <>
+    <Page>
       <Header
         back
         title={`${user?.profile.name}`}
@@ -89,6 +90,6 @@ export default function FollowersTab() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </>
+    </Page>
   );
 }

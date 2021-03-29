@@ -1,30 +1,31 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useCallback, useMemo, useState } from 'react';
 import { Link as RouterLink, useHistory } from 'react-router-dom';
 import { convertToRaw, EditorState } from 'draft-js';
+import axios, { AxiosResponse } from 'axios';
 
 import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import Chip from '@material-ui/core/Chip';
 import Divider from '@material-ui/core/Divider';
-import { Link, Typography, useMediaQuery } from '@material-ui/core';
-import UndoIcon from '@material-ui/icons/Undo';
-import RedoIcon from '@material-ui/icons/Redo';
+import { Link, Typography } from '@material-ui/core';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
+import RedoIcon from '@material-ui/icons/Redo';
+import UndoIcon from '@material-ui/icons/Undo';
 import { useTheme } from '@material-ui/core/styles';
 
-// import Editor, { createEditorStateWithText } from '@draft-js-plugins/editor';
-import Editor from 'draft-js-plugins-editor';
-import PluginEditor from 'draft-js-plugins-editor';
-import createEmojiPlugin from 'draft-js-emoji-plugin';
-import { ItalicButton, BoldButton, UnderlineButton } from 'draft-js-buttons';
-import createInlineToolbarPlugin from 'draft-js-inline-toolbar-plugin';
-import createLinkPlugin from 'draft-js-anchor-plugin';
-// @ts-ignore
-import createLinkifyPlugin from 'draft-js-linkify-plugin';
-// @ts-ignore
-import createUndoPlugin from 'draft-js-undo-plugin';
+import createEmojiPlugin from '@draft-js-plugins/emoji';
+import createInlineToolbarPlugin from '@draft-js-plugins/inline-toolbar';
+import createLinkifyPlugin from '@draft-js-plugins/linkify';
+import createLinkPlugin from '@draft-js-plugins/anchor';
+import createMentionPlugin from '@draft-js-plugins/mention';
+import createUndoPlugin from '@draft-js-plugins/undo';
+import Editor from '@draft-js-plugins/editor';
+import PluginEditor from '@draft-js-plugins/editor';
+import { ItalicButton, BoldButton } from '@draft-js-plugins/buttons';
 
-import 'draft-js-inline-toolbar-plugin/lib/plugin.css';
+import '@draft-js-plugins/inline-toolbar/lib/plugin.css';
+import '@draft-js-plugins/mention/lib/plugin.css';
 import emojiStyles from './styles/Emoji.module.css';
 import editorStyles from './styles/Editor.module.css';
 import linkStyles from './styles/Link.module.css';
@@ -32,9 +33,10 @@ import linkifyStyles from './styles/Linkify.module.css';
 import buttonStyles from './styles/Button.module.css';
 
 import CharCounter from './plugins/charCounter';
+import { ROUTES } from '../../lib/constants';
+import { Suggestions, Tag } from '../../types';
 import { useAuth } from '../../lib/hooks/auth';
 import { useCreateComment, useCreatePost } from '../../lib/hooks/posts';
-import { ROUTES, KEYS } from '../../lib/constants';
 
 const emojiPlugin = createEmojiPlugin({
   theme: emojiStyles,
@@ -48,11 +50,13 @@ const { InlineToolbar } = inlineToolbarPlugin;
 
 const linkifyPlugin = createLinkifyPlugin({
   target: '_blank',
+  // @ts-ignore
   theme: linkifyStyles,
 });
 
 const linkPlugin = createLinkPlugin({
   placeholder: 'http://…',
+  // @ts-ignore
   theme: linkStyles,
 });
 
@@ -75,16 +79,31 @@ const plugins = [
 ];
 
 interface IProps {
-  cacheKey: string;
+  cacheKey?: string;
   editorRef?: React.Ref<PluginEditor>;
   closeEditor?: () => void;
   post_id?: number;
+  tags: Tag[];
+  selectedTags: Tag[];
+  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
+  setSelectedTags: React.Dispatch<React.SetStateAction<Tag[]>>;
 }
 
-function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
+function RichEditor({
+  post_id,
+  editorRef,
+  closeEditor,
+  cacheKey,
+  tags,
+  setTags,
+  selectedTags,
+  setSelectedTags,
+}: IProps) {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
+  const [open, setOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestions[]>([]);
+
   const theme = useTheme();
-  const xsDown = useMediaQuery(theme.breakpoints.down('xs'));
   const history = useHistory<string>();
 
   const { data: auth } = useAuth();
@@ -94,17 +113,38 @@ function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
   const charLength = editorState.getCurrentContent().getPlainText().length;
   const hasText = editorState.getCurrentContent().hasText();
 
+  const { MentionSuggestions, mentionPlugin } = useMemo(() => {
+    const mentionPlugin = createMentionPlugin();
+    const { MentionSuggestions } = mentionPlugin;
+    return { mentionPlugin: [mentionPlugin], MentionSuggestions };
+  }, []);
+
+  const onOpenChange = useCallback((_open: boolean) => {
+    setOpen(_open);
+  }, []);
+
+  const onSearchChange = useCallback(async ({ value }: { value: string }) => {
+    console.log(value);
+    const { data }: AxiosResponse<Suggestions[]> = await axios.get(
+      `/users/search?q=${value}`
+    );
+
+    if (data) setSuggestions(data);
+    console.log(suggestions);
+  }, []);
+
   const submitEditor = () => {
     if (!hasText || charLength > 250) return;
 
     const contentState = editorState.getCurrentContent();
-    const body = JSON.stringify(convertToRaw(contentState));
+    const post = JSON.stringify({ body: convertToRaw(contentState) });
+    console.log(convertToRaw(contentState));
 
     if (post_id) {
-      createComment.mutate({ post_id, body, key: cacheKey });
+      createComment.mutate({ post_id, post });
       closeEditor && closeEditor();
     } else {
-      createPost.mutate({ body, key: KEYS.FEED, author: auth });
+      createPost.mutate({ post, key: cacheKey, author: auth });
       closeEditor && closeEditor();
       history.push(ROUTES.HOME);
     }
@@ -114,7 +154,7 @@ function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
 
   return (
     <>
-      <Box p={xsDown ? 1 : 2}>
+      <Box px={2} pt={2}>
         <Box display='flex' justifyContent='space-between'>
           <Box
             display='flex'
@@ -163,45 +203,68 @@ function RichEditor({ post_id, editorRef, closeEditor, cacheKey }: IProps) {
             ref={editorRef}
             editorState={editorState}
             onChange={setEditorState}
-            plugins={plugins}
+            plugins={[...plugins, ...mentionPlugin]}
           />
         </div>
-        <Divider />
-        <InlineToolbar>
-          {(externalProps: any) => (
-            <Fragment>
-              <BoldButton {...externalProps} />
-              <ItalicButton {...externalProps} />
-              <UnderlineButton {...externalProps} />
-              <linkPlugin.LinkButton {...externalProps} />
-            </Fragment>
-          )}
-        </InlineToolbar>
-        <Box display='flex' alignItems='center' mx={1}>
-          <Box display='flex' flexGrow={1}>
-            <EmojiSelect />
-            <UndoButton />
-            <RedoButton />
-          </Box>
-          <CharCounter limit={250} editorState={editorState} />
-          <Button
-            variant='contained'
-            color='primary'
-            disableElevation
-            onClick={() => submitEditor()}
-            style={{
-              textTransform: 'capitalize',
-              fontWeight: 'bold',
-              margin: theme.spacing(0, 2),
-              color: theme.palette.common.white,
-            }}
-            disabled={!hasText || charLength > 250}
-          >
-            Post
-          </Button>
+        <Box display='flex' alignItems='center' flexWrap='wrap'>
+          {selectedTags?.map((tag) => (
+            <Chip
+              key={tag.id}
+              variant='outlined'
+              size='small'
+              label={`#${tag.name}`}
+              style={{ marginRight: 8 }}
+              onDelete={() => {
+                setTags([tag, ...tags]);
+                setSelectedTags(selectedTags.filter((t) => t.id !== tag.id));
+              }}
+            />
+          ))}
         </Box>
+        <Divider />
+      </Box>
+      <InlineToolbar>
+        {(externalProps: any) => (
+          <Fragment>
+            <BoldButton {...externalProps} />
+            <ItalicButton {...externalProps} />
+            <linkPlugin.LinkButton {...externalProps} />
+          </Fragment>
+        )}
+      </InlineToolbar>
+      <Box display='flex' alignItems='center' py={1}>
+        <Box display='flex' flexGrow={1}>
+          <EmojiSelect />
+          <UndoButton />
+          <RedoButton />
+        </Box>
+        <CharCounter limit={250} editorState={editorState} />
+        <Button
+          variant='contained'
+          color='primary'
+          disableElevation
+          onClick={() => submitEditor()}
+          style={{
+            textTransform: 'capitalize',
+            fontWeight: 'bold',
+            margin: theme.spacing(0, 2),
+            color: theme.palette.common.white,
+          }}
+          disabled={!hasText || charLength > 250}
+        >
+          Post
+        </Button>
       </Box>
       <EmojiSuggestions />
+      <MentionSuggestions
+        open={open}
+        onOpenChange={onOpenChange}
+        suggestions={suggestions}
+        onSearchChange={onSearchChange}
+        onAddMention={() => {
+          // get the mention object selected
+        }}
+      />
     </>
   );
 }

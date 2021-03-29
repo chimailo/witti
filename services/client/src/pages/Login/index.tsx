@@ -15,7 +15,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles, createStyles, Theme, useTheme } from '@material-ui/core';
 
-import Logo from '../../components/logo';
+import Logo from '../../components/svg/logo';
 import { ROUTES } from '../../lib/constants';
 import { useLogin, useAuth } from '../../lib/hooks/auth';
 import { CenteredLoading } from '../../components/Loading';

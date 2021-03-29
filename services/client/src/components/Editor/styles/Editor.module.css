@@ -9,11 +9,12 @@
 }
 
 .editor :global(.public-DraftEditor-content) {
-  min-height: 60px;
+  min-height: 120px;
+  min-width: 550px;
 }
 
-@media screen and (min-width: 600px) {
-  .editor {
-    font-size: 18px;
+@media screen and (max-width: 600px) {
+  .editor :global(.public-DraftEditor-content) {
+    min-width: 100%;
   }
 }

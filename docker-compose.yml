@@ -58,3 +58,13 @@ services:
     ports:
       - 80:80
     restart: always
+
+  # elasticsearch:
+  #   image: elasticsearch:7.11.2
+  #   ports:
+  #     - 9200:9200
+  #     - 9300:9300
+  #   environment:
+  #     - 'discovery.type=single-node'
+  #   depends_on:
+  #     - app

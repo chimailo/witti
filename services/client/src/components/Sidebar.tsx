@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Link as RouterLink,
   NavLink,
   useHistory,
   LinkProps as RouterLinkProps,
 } from 'react-router-dom';
 import { useQueryClient } from 'react-query';
-import PluginEditor from 'draft-js-plugins-editor';
+import PluginEditor from '@draft-js-plugins/editor';
 
 import Avatar from '@material-ui/core/Avatar';
 import Badge from '@material-ui/core/Badge';
@@ -16,7 +15,6 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import AddOutlinedIcon from '@material-ui/icons/AddOutlined';
 import EmailOutlinedIcon from '@material-ui/icons/EmailOutlined';
 import HomeOutlinedIcon from '@material-ui/icons/HomeOutlined';
 import NotificationsNoneIcon from '@material-ui/icons/NotificationsNone';
@@ -24,6 +22,7 @@ import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
 import SearchIcon from '@material-ui/icons/Search';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { SvgIcon } from '@material-ui/core';
 import {
   createStyles,
   Theme,
@@ -33,11 +32,11 @@ import {
 import { Omit } from '@material-ui/types';
 
 import CreatePostModal from './modals/CreatePost';
-import Logo from './logo';
 import SidebarMenu from './dropdown/Sidebar';
 import { KEYS, ROUTES } from '../lib/constants';
 import { useNotificationCount } from '../lib/hooks/notifs';
 import { User } from '../types';
+import { Logo, PenIcon } from './svg';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -122,7 +121,7 @@ const ListItemLink = (props: ListItemLinkProps) => {
   );
 };
 
-export default function Sidebar({ user }: { user?: User }) {
+export default function Sidebar({ user, key }: { user?: User; key?: string }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const editorRef = React.useRef<PluginEditor>(null);
@@ -197,7 +196,11 @@ export default function Sidebar({ user }: { user?: User }) {
           button
         >
           <ListItemIcon className={classes.listItemIcon}>
-            <AddOutlinedIcon fontSize={matchesXs ? 'default' : 'large'} />
+            <SvgIcon
+              component={PenIcon}
+              viewBox='0 0 128 128'
+              style={{ fontSize: '2.5rem' }}
+            />
           </ListItemIcon>
           <Hidden only={['sm', 'md']}>
             <ListItemText
@@ -267,7 +270,7 @@ export default function Sidebar({ user }: { user?: User }) {
       <CreatePostModal
         editorRef={editorRef}
         isOpen={isModalOpen}
-        cacheKey={KEYS.FEED}
+        cacheKey={key}
         handleClose={() => setModalOpen(false)}
       />
     </section>

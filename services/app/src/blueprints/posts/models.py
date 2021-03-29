@@ -20,6 +20,23 @@ post_likes = db.Table(
 )
 
 
+post_tags = db.Table(
+    'post_tags',
+    db.Column(
+        'tag_id',
+        db.Integer,
+        db.ForeignKey('tags.id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    ),
+    db.Column(
+        'post_id',
+        db.Integer,
+        db.ForeignKey('posts.id', ondelete='CASCADE',  onupdate='CASCADE'),
+        primary_key=True
+    )
+)
+
+
 class Post(db.Model, ResourceMixin):
     __tablename__ = 'posts'
 
@@ -36,6 +53,7 @@ class Post(db.Model, ResourceMixin):
         'User', secondary=post_likes, lazy='dynamic',
         backref=db.backref('likes', lazy='dynamic')
     )
+    tags = db.relationship('Tag', secondary=post_tags, backref='posts')
 
     def __repr__(self):
         return f'<Post {self.body}>'
@@ -45,7 +63,7 @@ class Post(db.Model, ResourceMixin):
             post_likes.c.user_id == user.id).count() > 0
 
     @classmethod
-    def get_posts_reactions(cls):
+    def get_reactions(cls):
         '''Gets all posts and their reactions.'''
         posts = cls.query.filter(cls.comment_id.is_(None)).subquery()
         ncomments = db.session.query(posts.c.id, func.count(cls.id).label(
@@ -59,6 +77,14 @@ class Post(db.Model, ResourceMixin):
         return db.session.query(ncomments.c.id, (
             ncomments.c.num_comments + nlikes.c.num_likes).label(
                 'reactions')).outerjoin(nlikes, ncomments.c.id == nlikes.c.id)
+
+    @classmethod
+    def get_by_reactions(cls):
+        '''Gets all posts and ordered by their reactions.'''
+        posts = cls.get_reactions().subquery()
+        return db.session.query(Post.id, func.row_number().over(
+            order_by=posts.c.reactions).label('sequence')).join(
+                cls, posts.c.id == Post.id)
 
     def to_dict(self, auth):
         return {
@@ -76,4 +102,18 @@ class Post(db.Model, ResourceMixin):
                 'isFollowing': auth.is_following(self.author)
                 if auth.id != self.author.id else None,
             },
+            'tags': [{
+                'id': tag.id,
+                'name': tag.name,
+            } for tag in self.tags],
         }
+
+
+class Tag(db.Model, ResourceMixin):
+    __tablename__ = 'tags'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), nullable=False, index=True, unique=True)
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import Link from '@material-ui/core/Link';
 import SvgIcon from '@material-ui/core/SvgIcon';
-import { ROUTES } from '../lib/constants';
+import { ROUTES } from '../../lib/constants';
 
 export default function Logo({ size = 75 }: { size?: number }) {
   return (

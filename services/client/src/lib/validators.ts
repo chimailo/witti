@@ -64,4 +64,19 @@ export const validateTag = () =>
   Yup.string()
     .max(32, 'Must be 32 characters or less')
     .min(2, 'Must be at least 2 characters')
-    .required('Required');
+    .matches(/^[a-zA-Z0-9_]*$/, {
+      message: 'Must contain only valid characters (a-z, A-Z, 0-9)',
+      excludeEmptyString: true,
+    })
+    .test({
+      name: 'uniqueTag',
+      exclusive: true,
+      message: 'That tag already exists',
+      test: async (value) => {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}/tag/check`,
+          { tag: value }
+        );
+        return res.data.res;
+      },
+    });

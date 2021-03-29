@@ -4,13 +4,13 @@ from flask import Blueprint, current_app, jsonify, request
 from src import db
 from src.utils import urlsafe_base64
 from src.utils.decorators import authenticate
-from src.blueprints.errors import server_error, not_found
+from src.blueprints.errors import server_error, not_found, bad_request
 from src.blueprints.users.models import User
 from src.blueprints.auth.models import Auth
-from src.blueprints.posts.models import Post
+from src.blueprints.posts.models import Post, Tag
 from src.blueprints.messages.models import Notification
 from src.blueprints.users.schema import UserSchema
-from src.blueprints.posts.schema import PostSchema
+from src.blueprints.posts.schema import PostSchema, TagSchema
 
 
 users = Blueprint('users', __name__, url_prefix='/api/users')
@@ -56,8 +56,11 @@ def unfollow(user, id):
         return not_found('User not found')
 
     user.unfollow(followed)
-    db.session.delete(
-        Notification.find_by_attr(subject='follow', item_id=user.id))
+
+    notif = Notification.find_by_attr(subject='follow', item_id=user.id)
+
+    if (notif):
+        db.session.delete(notif)
 
     try:
         user.save()
@@ -293,3 +296,27 @@ def get_liked_posts(user, username):
         'nextCursor': nextCursor,
         'total': query.count(),
     }
+
+
+@users.route('/tags', methods=['GET'])
+@authenticate
+def get_followed_tags(user):
+    """Get a users list of followed tags"""
+    return TagSchema(many=True).dump(user.tags)
+
+
+@users.route('/tags/<int:tag_id>', methods=['POST'])
+@authenticate
+def follow_tag(user, tag_id):
+    tag = Tag.query.filter_by(id=tag_id).first()
+
+    if not tag:
+        return bad_request(f'No tag with id "{tag_id}" exists')
+
+    try:
+        user.unfollow_tag(tag) \
+            if user.is_following_tag(tag) else user.follow_tag(tag)
+    except (exc.IntegrityError, ValueError):
+        db.session.rollback()
+        return server_error('Something went wrong, please try again.')
+    return TagSchema().dump(tag)

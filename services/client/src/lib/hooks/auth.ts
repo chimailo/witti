@@ -9,7 +9,6 @@ import { setAuthToken } from '../../lib/axiosConfig';
 import { KEYS } from '../constants';
 import {
   APIError,
-  Auth,
   Post,
   User,
   LoginParams,

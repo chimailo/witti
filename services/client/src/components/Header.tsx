@@ -7,11 +7,18 @@ import Drawer from '@material-ui/core/Drawer';
 import FormControl from '@material-ui/core/FormControl';
 import Hidden from '@material-ui/core/Hidden';
 import IconButton from '@material-ui/core/IconButton';
+import InputBase from '@material-ui/core/InputBase';
 import MenuItem from '@material-ui/core/MenuItem';
+import SearchIcon from '@material-ui/icons/Search';
 import Select from '@material-ui/core/Select';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import { makeStyles, Theme, createStyles } from '@material-ui/core';
+import {
+  makeStyles,
+  Theme,
+  createStyles,
+  fade,
+} from '@material-ui/core/styles';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 
@@ -42,6 +49,31 @@ const useStyles = makeStyles((theme: Theme) =>
       textTransform: 'capitalize',
       lineHeight: '1.4',
       fontWeight: theme.typography.fontWeightBold,
+    },
+    search: {
+      display: 'flex',
+      alignItems: 'center',
+      flexGrow: 1,
+      borderRadius: 32,
+      margin: theme.spacing(0, 2),
+      padding: theme.spacing(0, 2),
+      backgroundColor: theme.palette.secondary.light,
+      '&:active': {
+        backgroundColor: 'unset',
+        border: `1px solid ${theme.palette.primary.light}`,
+        // boxShadow: `${fade(theme.palette.primary.main, 0.25)} 0 0 0 0.2rem`,
+        // borderColor: theme.palette.primary.main,
+      },
+    },
+    searchIcon: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'none',
+      marginRight: theme.spacing(1),
+    },
+    inputRoot: {
+      width: '100%',
     },
   })
 );
@@ -82,75 +114,98 @@ export default function Header(props: HeaderProps) {
 
   return (
     <Toolbar classes={{ root: classes.toolbar }} disableGutters>
-      {back && (
-        <IconButton
-          size='small'
-          aria-label='go back'
-          onClick={() => history.goBack()}
-          style={{ marginRight: 8 }}
-        >
-          <KeyboardBackspaceIcon color='primary' />
-        </IconButton>
-      )}
-      {avatar && (
-        <IconButton
-          size='small'
-          aria-label='menu'
-          onClick={() => history.push(`/${user?.auth.username}/profiles`)}
-        >
-          <Avatar
-            alt={user ? user.profile.avatar : auth?.profile.avatar}
-            src={user ? user.profile.avatar : auth?.profile.avatar}
-            className={classes.avatar}
-          />
-        </IconButton>
-      )}
-      <Box ml={1} flexGrow={1}>
-        <Typography
-          variant='subtitle1'
-          component='h3'
-          className={classes.title}
-          noWrap
-        >
-          {title}
-        </Typography>
-        {meta && (
-          <Typography color='textSecondary' noWrap style={{ lineHeight: 1 }}>
-            <small>{meta}</small>
-          </Typography>
+      <Box display='flex'>
+        {back && (
+          <IconButton
+            size='small'
+            aria-label='go back'
+            onClick={() => history.goBack()}
+          >
+            <KeyboardBackspaceIcon color='primary' />
+          </IconButton>
         )}
+        {avatar && (
+          <IconButton
+            size='small'
+            aria-label='menu'
+            onClick={() => history.push(`/${user?.auth.username}/profiles`)}
+          >
+            <Avatar
+              alt={user ? user.profile.avatar : auth?.profile.avatar}
+              src={user ? user.profile.avatar : auth?.profile.avatar}
+              className={classes.avatar}
+            />
+          </IconButton>
+        )}
+        <Box ml={1}>
+          <Typography
+            variant='subtitle1'
+            component='h3'
+            className={classes.title}
+            noWrap
+          >
+            {title}
+          </Typography>
+          {meta && (
+            <Typography color='textSecondary' noWrap style={{ lineHeight: 1 }}>
+              <small>{meta}</small>
+            </Typography>
+          )}
+        </Box>
       </Box>
-      {title && title.toLowerCase() === 'home' && (
-        <FormControl>
-          <Select
-            disableUnderline
-            open={isSelectOpen}
-            value={feed}
-            onChange={handleFeedChange}
-            onClose={() => setSelectOpen(false)}
-            onOpen={() => setSelectOpen(true)}
-          >
-            <MenuItem value={'latest'}>latest</MenuItem>
-            <MenuItem value={'top'}>top</MenuItem>
-          </Select>
-        </FormControl>
-      )}
-      {/* Include 'Edit User', 'follow' and 'unfollow', buttons when the user navigates to `/:username/user/*   */}
-      <Hidden smUp>
-        <IconButton size='small' aria-label='menu' onClick={toggleDrawer(true)}>
-          <MoreVertIcon />
-        </IconButton>
+      <span>
+        {title?.toLowerCase() === 'explore' && (
+          <div className={classes.search}>
+            <div className={classes.searchIcon}>
+              <SearchIcon fontSize='small' />
+            </div>
+            <InputBase
+              placeholder='Search…'
+              classes={{
+                root: classes.inputRoot,
+              }}
+              inputProps={{ 'aria-label': 'search' }}
+            />
+          </div>
+        )}
+        {title &&
+          (title.toLowerCase() === 'home' ||
+            title.toLowerCase() === 'explore') && (
+            <FormControl>
+              <Select
+                disableUnderline
+                open={isSelectOpen}
+                value={feed}
+                onChange={handleFeedChange}
+                onClose={() => setSelectOpen(false)}
+                onOpen={() => setSelectOpen(true)}
+              >
+                <MenuItem value={'latest'}>latest</MenuItem>
+                <MenuItem value={'top'}>top</MenuItem>
+              </Select>
+            </FormControl>
+          )}
+        {/* Include 'Edit User', 'follow' and 'unfollow', buttons when the user navigates to `/:username/user/*   */}
         <Hidden smUp>
-          <Drawer
-            anchor='left'
-            open={isDrawerOpen}
-            onClose={toggleDrawer(false)}
-            classes={{ paper: classes.drawer }}
+          <IconButton
+            size='small'
+            aria-label='menu'
+            onClick={toggleDrawer(true)}
           >
-            <Sidebar user={auth} />
-          </Drawer>
+            <MoreVertIcon />
+          </IconButton>
+          <Hidden smUp>
+            <Drawer
+              anchor='left'
+              open={isDrawerOpen}
+              onClose={toggleDrawer(false)}
+              classes={{ paper: classes.drawer }}
+            >
+              <Sidebar user={auth} />
+            </Drawer>
+          </Hidden>
         </Hidden>
-      </Hidden>
+      </span>
     </Toolbar>
   );
 }

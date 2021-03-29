@@ -15,6 +15,14 @@ export type SignupParams = {
   password: string;
 };
 
+interface Suggestions {
+  id: number;
+  name: string;
+  username: string;
+  avatar: string;
+  link: string;
+}
+
 export type Auth = {
   email: string;
   username: string;
@@ -57,6 +65,7 @@ export type Post = {
   likes: number;
   comments: number;
   parent: Post | null;
+  tags: Tag[]
   author: {
     id: number;
     name: string;
@@ -65,6 +74,11 @@ export type Post = {
     isFollowing: boolean;
   };
 };
+
+export type Tag = {
+  id: number;
+  name: string;
+}
 
 export type Message = {
   id: number;

@@ -3,7 +3,10 @@ export const REFETCH_INTERVAL = 1000;
 // query keys
 const AUTH = 'auth';
 const USER = 'user';
-const FEED = 'feed';
+const HOME_LATEST = 'home/latest';
+const HOME_TOP = 'home/top';
+const EXPLORE_LATEST = 'explore/latest';
+const EXPLORE_TOP = 'explore/top';
 const CHAT_KEY = 'chat';
 const NOTIFS = 'notifs';
 const NOTIFS_COUNT = 'notifs_count';
@@ -14,7 +17,10 @@ export const KEYS = {
   CHAT_KEY,
   AUTH,
   USER,
-  FEED,
+  HOME_LATEST,
+  HOME_TOP,
+  EXPLORE_TOP,
+  EXPLORE_LATEST,
   NOTIFS,
   CREATE_POST,
   NOTIFS_COUNT,

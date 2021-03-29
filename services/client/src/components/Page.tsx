@@ -20,14 +20,20 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-export default function Page({ children }: { children: React.ReactNode }) {
+export default function Page({
+  children,
+  key,
+}: {
+  key?: string;
+  children: React.ReactNode;
+}) {
   const classes = useStyles();
   const { data: auth } = useAuth();
 
   return (
     <Container maxWidth='xl' disableGutters>
       <Hidden xsDown>
-        <Sidebar user={auth} />
+        <Sidebar user={auth} key={key} />
       </Hidden>
       <div className={classes.main}>
         <Grid container spacing={1}>

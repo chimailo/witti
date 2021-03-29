@@ -49,6 +49,22 @@ followers = db.Table(
 )
 
 
+user_tags = db.Table(
+    'user_tags',
+    db.Column(
+        'user_id',
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    ),
+    db.Column(
+        'tag_id',
+        db.Integer,
+        db.ForeignKey('tags.id', ondelete='CASCADE',  onupdate='CASCADE'),
+        primary_key=True
+    )
+)
+
 deleted_msgs = db.Table(
     'deleted_messages',
     db.Column(
@@ -92,6 +108,7 @@ class User(db.Model, ResourceMixin):
     )
     posts = db.relationship(
         'Post', backref='author', cascade='all, delete-orphan')
+    tags = db.relationship('Tag', secondary='user_tags', backref='user')
     chat1 = db.relationship(
         'Chat', foreign_keys='Chat.user1_id',
         backref='user1', cascade='all, delete-orphan')
@@ -155,6 +172,17 @@ class User(db.Model, ResourceMixin):
         own_posts = db.session.query(Post.id).filter_by(
             user_id=self.id).filter(Post.comment_id.is_(None))
         return followed_users_posts.union(own_posts)
+    
+    def follow_tag(self, tag):
+        if not self.is_following_tag(tag):
+            self.followed.append(tag)
+
+    def unfollow_tag(self, tag):
+        if self.is_following_tag(tag):
+            self.followed.remove(tag)
+
+    def is_following_tag(self, tag):
+        return self.tags.filter(user_tags.c.tag_id == tag.id).count() > 0
 
     def add_notification(self, subject, item_id, id, **kwargs):
         notif = Notification(

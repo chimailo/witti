@@ -204,8 +204,6 @@ def delete_message(user, msg_id):
 @authenticate
 def get_notifications_count(user):
     """Get the count of new notifications"""
-    # query = user.get_notifications()
-    print('*'*8, user.last_notif_read_time, '*'*8)
     return {
         'count': user.get_notifications().filter(
             Notification.timestamp > user.last_notif_read_time).count()
