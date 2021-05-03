@@ -5,14 +5,15 @@ from src.blueprints.messages.schema import NotificationSchema
 from src.blueprints.messages.models import Notification
 
 from src import db
-from src.utils import urlsafe_base64
-from src.utils.decorators import authenticate
-from src.blueprints.errors import error_response, bad_request, server_error, \
-    not_found
+from src.lib import urlsafe_base64
+from src.lib.auth import authenticate
+from src.blueprints.errors import error_response, bad_request, \
+     server_error, not_found
 from src.blueprints.users.models import User
-from src.blueprints.auth.models import Auth
+from src.blueprints.profiles.models import Profile
 from src.blueprints.messages.models import Message, Chat, LastReadMessage
 from src.blueprints.messages.schema import MessageSchema
+from src.blueprints.users.schema import UserSchema
 
 messages = Blueprint('messages', __name__, url_prefix='/api')
 
@@ -54,12 +55,7 @@ def get_messages(user):
         message = MessageSchema(exclude=('author_id',)).dump(msg)
         message['isRead'] = False if not last_read_msg else \
             last_read_msg.timestamp >= msg.created_on
-        message['user'] = {
-            'id': author.id,
-            'username': author.auth.username,
-            'name': author.profile.name,
-            'avatar': author.profile.avatar
-        }
+        message['user'] = UserSchema(only=('id', 'profile',)).dump(author)
         messages.append(message)
 
     return {
@@ -74,7 +70,7 @@ def get_chat_messages(user):
     username = request.args.get('username', '')
     cursor = request.args.get('cursor')
     items_per_page = current_app.config['ITEMS_PER_PAGE']
-    a_user = Auth.find_by_identity(username).user
+    a_user = Profile.find_by_username(username).user
     nextCursor = None
     msgs = None
 

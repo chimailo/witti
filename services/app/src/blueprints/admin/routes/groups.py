@@ -6,7 +6,6 @@ from src import db
 from src.blueprints.errors import error_response, \
     bad_request, server_error, not_found
 from src.blueprints.admin.routes import admin
-from src.blueprints.auth.models import Auth
 from src.blueprints.users.models import User
 from src.blueprints.admin.models import Group, Permission
 from src.blueprints.admin.schema import GroupSchema

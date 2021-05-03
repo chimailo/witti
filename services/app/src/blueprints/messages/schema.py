@@ -13,7 +13,6 @@ class NotificationSchema(Schema):
     subject = fields.Str(dump_only=True)
     item_id = fields.Int(dump_only=True)
     timestamp = fields.DateTime(dump_only=True)
-    user = fields.Nested(
-        'UserSchema', dump_only=True, only=(
-            'id', 'profile.name', 'profile.avatar', 'auth.username',))
+    user = fields.Nested('UserSchema', dump_only=True, only=(
+        'id', 'profile',))
     post = fields.Nested('PostSchema', dump_only=True, only=('id', 'body',))

@@ -1,17 +1,18 @@
 import os
 
+from elasticsearch import Elasticsearch
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+# from flask_migrate import Migrate
 from flask_cors import CORS
 
 
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 # set up extensions
 db = SQLAlchemy()
-migrate = Migrate()
+# migrate = Migrate()
 cors = CORS()
 
 
@@ -32,8 +33,13 @@ def create_app(config=app_settings):
 
     # set up extensions
     db.init_app(app)
-    migrate.init_app(app, db)
+    # migrate.init_app(app, db)
     cors.init_app(app)
+
+    app.elasticsearch = Elasticsearch(app.config['ELASTICSEARCH_URL']) \
+        if app.config['ELASTICSEARCH_URL'] else None
+    app.search_host = app.config['ES_HOST'] if app.config['ES_HOST'] else None
+    app.search_port = app.config['ES_PORT'] if app.config['ES_PORT'] else None
 
     @app.route('/api/ping')
     def ping():
@@ -41,24 +47,27 @@ def create_app(config=app_settings):
 
     # Register Blueprint
     from src.blueprints.errors import errors
-    app.register_blueprint(errors)
+    from src.blueprints.search import search
     from src.blueprints.admin.routes import admin
-    app.register_blueprint(admin)
-    from src.blueprints.auth.routes import auth
-    app.register_blueprint(auth)
     from src.blueprints.profiles.routes import profile
-    app.register_blueprint(profile)
+    from src.blueprints.tags.routes import tags
     from src.blueprints.posts.routes import posts
-    app.register_blueprint(posts)
     from src.blueprints.users.routes import users
-    app.register_blueprint(users)
     from src.blueprints.messages.routes import messages
+    
+    app.register_blueprint(users)
+    app.register_blueprint(posts)
+    app.register_blueprint(tags)
+    app.register_blueprint(profile)
+    app.register_blueprint(admin)
+    app.register_blueprint(search)
+    app.register_blueprint(errors)
     app.register_blueprint(messages)
 
-    from src.blueprints.auth.models import Auth
     from src.blueprints.users.models import User
+    from src.blueprints.posts.models import Post
+    from src.blueprints.tags.models import Tag
     from src.blueprints.profiles.models import Profile
-    from src.blueprints.posts.models import Post, Tag
     from src.blueprints.messages.models import Message, Chat
     from src.blueprints.admin.models import Group, Permission, Model
 
@@ -69,7 +78,6 @@ def create_app(config=app_settings):
             "app": app,
             "db": db,
             "User": User,
-            "Auth": Auth,
             "Profile": Profile,
             "Post": Post,
             "Tag": Tag,

@@ -1,12 +1,15 @@
-from datetime import datetime
-
+import random
+import jwt
+from datetime import datetime, timedelta
+from flask import current_app
 from sqlalchemy import and_
 from sqlalchemy.sql import func
 from sqlalchemy.orm import aliased
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from src import db
-from src.utils.models import ResourceMixin
-from src.blueprints.posts.models import Post
+from src.lib.mixins import ResourceMixin, SearchableMixin
+from src.blueprints.posts.models import Post, post_tags
 from src.blueprints.admin.models import Permission
 from src.blueprints.messages.models import Message, Chat, \
     LastReadMessage, Notification
@@ -82,21 +85,16 @@ deleted_msgs = db.Table(
 )
 
 
-class User(db.Model, ResourceMixin):
+class User(db.Model, ResourceMixin, SearchableMixin):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    # Activity tracking.
-    sign_in_count = db.Column(db.Integer, nullable=False, default=0)
-    current_sign_in_on = db.Column(db.DateTime)
-    current_sign_in_ip = db.Column(db.String(32))
-    last_sign_in_on = db.Column(db.DateTime)
-    last_sign_in_ip = db.Column(db.String(32))
+    email = db.Column(db.String(128), index=True, unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+    is_active = db.Column(db.Boolean(), default=True, nullable=False)
+    is_admin = db.Column(db.Boolean(), default=False, nullable=False)
 
     # Relationships
-    auth = db.relationship(
-        'Auth', uselist=False, backref='user', lazy='joined',
-        cascade='all, delete-orphan')
     profile = db.relationship(
         'Profile', uselist=False, backref='user', lazy='joined',
         cascade='all, delete-orphan')
@@ -108,7 +106,8 @@ class User(db.Model, ResourceMixin):
     )
     posts = db.relationship(
         'Post', backref='author', cascade='all, delete-orphan')
-    tags = db.relationship('Tag', secondary='user_tags', backref='user')
+    tags = db.relationship(
+        'Tag', secondary='user_tags', lazy='dynamic', backref='users')
     chat1 = db.relationship(
         'Chat', foreign_keys='Chat.user1_id',
         backref='user1', cascade='all, delete-orphan')
@@ -131,26 +130,80 @@ class User(db.Model, ResourceMixin):
         lazy='dynamic'
     )
 
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        self.password = User.hash_password(kwargs.get('password', ''))
+
     def __str__(self):
-        return f'<User {self.id}>'
+        return f'<User {self.id} {self.email}>'
 
-    def update_activity_tracking(self, ip_address):
+    @classmethod
+    def find_by_email(cls, email):
+        return cls.query.filter((cls.email == email)).first()
+
+    @classmethod
+    def hash_password(cls, password):
         """
-        Update various fields on the user that's
-        related to meta data on their account.
+        Hash a plaintext string using PBKDF2.
 
-        :param ip_address: str
-        :return: SQLAlchemy commit results
+        :param password: Password in plain text
+        :type password: str
+        :return: str
         """
-        self.sign_in_count += 1
+        if password:
+            return generate_password_hash(password)
 
-        self.last_sign_in_on = self.current_sign_in_on
-        self.last_sign_in_ip = self.current_sign_in_ip
+        return None
 
-        self.current_sign_in_on = datetime.utcnow()
-        self.current_sign_in_ip = ip_address
+    def check_password(self, password):
+        """
+        Check if the provided password matches that of the specified user.
 
-        return self.save()
+        :param password: Password in plain text
+        :return: boolean
+        """
+        return check_password_hash(self.password, password)
+
+    def encode_auth_token(self):
+        """Generates the auth token"""
+        try:
+            payload = {
+                'exp': datetime.utcnow() + timedelta(
+                    days=current_app.config.get('TOKEN_EXPIRATION_DAYS'),
+                    seconds=current_app.config.get('TOKEN_EXPIRATION_SECONDS')
+                ),
+                'iat': datetime.utcnow(),
+                'sub': {
+                    'id': self.id,
+                }
+            }
+            return jwt.encode(
+                payload,
+                current_app.config.get('SECRET_KEY'),
+                algorithm='HS256'
+            )
+        except Exception as e:
+            return e
+
+    @staticmethod
+    def decode_auth_token(token):
+        """
+        Decodes the auth token
+
+        :param string: token
+        :return dict: The user's identity
+        """
+        try:
+            payload = jwt.decode(
+                token,
+                current_app.config.get('SECRET_KEY'),
+                algorithms='HS256'
+            )
+            return payload.get('sub')
+        except jwt.ExpiredSignatureError:
+            return 'Signature expired. Please log in again.'
+        except jwt.InvalidTokenError:
+            return 'Invalid token. Please log in again.'
 
     def follow(self, user):
         if not self.is_following(user):
@@ -164,6 +217,18 @@ class User(db.Model, ResourceMixin):
         return self.followed.filter(
             followers.c.followed_id == user.id).count() > 0
 
+    def get_users_to_follow(self, count=3):
+        likes = self.likes.subquery()
+        liked_posts = db.session.query(User).join(
+            likes, User.id == likes.c.user_id).distinct().except_(
+                self.followed).order_by(User.updated_on).limit(count)
+
+        if liked_posts.count() > 0:
+            return liked_posts.all()
+
+        return [User.find_by_id(random.randrange(
+            User.query.count())) for _ in range(count)] 
+
     def get_followed_posts(self):
         followed_users_posts = db.session.query(Post.id).join(
             followers, (followers.c.followed_id == Post.user_id)).filter(
@@ -171,15 +236,20 @@ class User(db.Model, ResourceMixin):
                     Post.comment_id.is_(None))
         own_posts = db.session.query(Post.id).filter_by(
             user_id=self.id).filter(Post.comment_id.is_(None))
-        return followed_users_posts.union(own_posts)
-    
+
+        return db.session.query(Post.id).join(
+            post_tags, Post.id == post_tags.c.post_id).join(
+                user_tags, post_tags.c.tag_id == user_tags.c.tag_id).filter(
+                    user_tags.c.user_id == self.id).union(
+                        followed_users_posts.union(own_posts))
+
     def follow_tag(self, tag):
         if not self.is_following_tag(tag):
-            self.followed.append(tag)
+            self.tags.append(tag)
 
     def unfollow_tag(self, tag):
         if self.is_following_tag(tag):
-            self.followed.remove(tag)
+            self.tags.remove(tag)
 
     def is_following_tag(self, tag):
         return self.tags.filter(user_tags.c.tag_id == tag.id).count() > 0

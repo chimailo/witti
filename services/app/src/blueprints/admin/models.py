@@ -1,5 +1,5 @@
 from src import db
-from src.utils.models import ResourceMixin
+from src.lib.mixins import ResourceMixin
 
 
 grp_members = db.Table(

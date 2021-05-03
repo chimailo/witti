@@ -6,11 +6,9 @@ from src import db
 from src.blueprints.errors import error_response, \
     bad_request, not_found, server_error
 from src.blueprints.admin.routes import admin
-from src.blueprints.auth.models import Auth
 from src.blueprints.users.models import User
 from src.blueprints.profiles.models import Profile
 from src.blueprints.admin.models import Permission
-from src.blueprints.auth.schema import AuthSchema
 from src.blueprints.users.schema import UserSchema
 
 
@@ -52,34 +50,29 @@ def add_user():
         return bad_request("No input data provided")
 
     try:
-        data = AuthSchema().load(request_data)
+        data = UserSchema(partial=True).load(request_data)
     except ValidationError as err:
         return error_response(422, err.messages)
 
     email = data.get('email')
-    password = data.get('password')
     name = data.get('name')
     username = data.get('username')
+    password = data.get('password')
 
     # check for existing user
-    user = User.query.filter((User.email == email) | (
-        User.username == username)).first()
+    user = User.query.filter(User.email == email).first()
+    profile = User.query.filter(User.username == username).first()
 
-    if user is not None:
+    if user or profile:
         return bad_request('That user already exists.')
 
     # add new user to db
     profile = Profile()
     profile.name = name
+    profile.username = username
     profile.avatar = profile.set_avatar(email)
 
-    auth = Auth(password=password)
-    auth.email = email
-    auth.username = username
-    auth.is_active = data.get('is_active') or False
-    auth.is_admin = data.get('is_admin') or False
-
-    user = User(auth=auth, profile=profile)
+    user = User(email=email, password=password, profile=profile)
 
     try:
         user.save()
@@ -103,7 +96,10 @@ def update_user(id):
 
     try:
         data = UserSchema().load(request_data)
+    except ValidationError as err:
+        return error_response(422, err.messages)
 
+    try:
         user = User.find_by_id(id)
         existing_user = User.find_by_identity(data.get('auth')['username'])
 
@@ -115,16 +111,12 @@ def update_user(id):
         user.profile.name = data.get('profile')['name']
         user.profile.bio = data.get('profile')['bio']
         user.profile.dob = data.get('profile')['dob']
-        user.auth.username = data.get('auth')['username']
-        user.auth.is_active = data.get('auth')['is_active']
-        user.auth.is_admin = data.get('auth')['is_admin']
+        user.profile.username = data.get('profile')['username']
+        user.is_active = data.get('is_active')
+        user.is_admin = data.get('is_admin')
         user.save()
 
         return jsonify(UserSchema().dump(user))
-
-    # handle errors
-    except ValidationError as err:
-        return error_response(422, err.messages)
     except (exc.IntegrityError, ValueError):
         db.session.rollback()
         return server_error('Something went wrong, please try again.')

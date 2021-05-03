@@ -1,26 +1,40 @@
+from sqlalchemy import exc
 from flask import jsonify, request, Blueprint
 from marshmallow import ValidationError
 
-from src.utils.decorators import authenticate
+from src import db
+from src.lib.auth import authenticate
 from src.blueprints.errors import error_response, \
     bad_request, server_error, not_found
-from src.blueprints.auth.models import Auth
 from src.blueprints.users.schema import UserSchema
+from src.blueprints.profiles.models import Profile
 from src.blueprints.profiles.schema import ProfileSchema
 
+
 profile = Blueprint('profile', __name__, url_prefix='/api')
+
+
+@profile.route('/profile/check-username', methods=['POST'])
+def check_username():
+    data = request.get_json()
+    user = Profile.find_by_username(data.get('username'))
+
+    if user is not None:
+        if user.id != id:
+            return {'res': False}
+
+    return {'res': True}
 
 
 @profile.route('/profile/<username>', methods=['GET'])
 @authenticate
 def get_profile(user, username):
-    a_user = Auth.find_by_identity(username)
+    a_user = Profile.find_by_username(username).user
 
     if a_user:
         profile = UserSchema(
-            only=('id', 'auth.username', 'profile', 'followers', 'following',)
-        ).dump(a_user.user)
-        if user.auth.username != username:
+            only=('id', 'profile', 'followers', 'following',)).dump(a_user)
+        if user.profile.username != username:
             profile['isFollowing'] = user.is_following(a_user)
         return jsonify(profile)
 
@@ -37,20 +51,22 @@ def update_profile(user):
 
     try:
         data = ProfileSchema().load(request_data)
-
-        profile = user.profile
-        profile.name = data.get('name')
-        profile.dob = data.get('dob')
-        profile.bio = data.get('bio')
-        profile.save()
-
-        return jsonify(UserSchema(
-            only=('id' 'auth.username', 'profile',)).dump(profile))
-
     except ValidationError as error:
         return error_response(422, error.messages)
-    except Exception:
+
+    profile = user.profile
+    profile.username = data.get('username')
+    profile.name = data.get('name')
+    profile.dob = data.get('dob')
+    profile.bio = data.get('bio')
+
+    try:
+        profile.save()
+    except (exc.IntegrityError, ValueError):
+        db.session.rollback()
         return server_error('Something went wrong, please try again.')
+    else:
+        return jsonify(ProfileSchema().dump(profile))
 
 
 @profile.route('/profile', methods=['DELETE'])
@@ -58,6 +74,7 @@ def update_profile(user):
 def delete_profile(user):
     try:
         user.delete()
-        return {'message': 'Successfully deleted.'}
     except Exception:
         return server_error('Something went wrong, please try again.')
+    else:
+        return {'message': 'Successfully deleted profile.'}

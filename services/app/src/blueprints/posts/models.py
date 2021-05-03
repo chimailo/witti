@@ -1,6 +1,6 @@
 from sqlalchemy.sql import func
 from src import db
-from src.utils.models import ResourceMixin
+from src.lib.mixins import ResourceMixin
 
 
 post_likes = db.Table(
@@ -96,7 +96,7 @@ class Post(db.Model, ResourceMixin):
             'created_on': self.created_on,
             'author': {
                 'id': self.author.id,
-                'username': self.author.auth.username,
+                'username': self.author.profile.username,
                 'name': self.author.profile.name,
                 'avatar': self.author.profile.avatar,
                 'isFollowing': auth.is_following(self.author)
@@ -107,13 +107,3 @@ class Post(db.Model, ResourceMixin):
                 'name': tag.name,
             } for tag in self.tags],
         }
-
-
-class Tag(db.Model, ResourceMixin):
-    __tablename__ = 'tags'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), nullable=False, index=True, unique=True)
-
-    def __repr__(self):
-        return f'<Tag {self.name}>'

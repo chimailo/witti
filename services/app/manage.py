@@ -9,11 +9,12 @@ from sqlalchemy import exc, and_
 from flask.cli import FlaskGroup
 
 from src import create_app, db
-from src.utils.perms import set_model_perms
+from src.lib.perms import set_model_perms
+from src.lib.search import add_to_index, TagsIndex, UsersIndex
 from src.blueprints.users.models import User
-from src.blueprints.auth.models import Auth
+from src.blueprints.posts.models import Post
 from src.blueprints.profiles.models import Profile
-from src.blueprints.posts.models import Post, Tag
+from src.blueprints.tags.models import Tag
 from src.blueprints.messages.models import Message, Chat, LastReadMessage
 from src.blueprints.admin.models import Group
 from src.blueprints.admin.models import Permission
@@ -65,6 +66,15 @@ def routes():
 
 
 @cli.command()
+def index_search_fields():
+    """
+    Index searchable fields.
+    """
+    add_to_index(TagsIndex, Tag)
+    add_to_index(UsersIndex, User)
+
+
+@cli.command()
 @click.option(
     "--skip-init/--no-skip-init",
     default=True,
@@ -109,6 +119,7 @@ def seed_db(num_of_users, num_of_posts, num_of_comments):
     db_init()
     seed_users(num_of_users)
     seed_posts(num_of_posts)
+    follow_tags()
     seed_comments(num_of_comments)
     seed_conversations()
     seed_messages()
@@ -122,9 +133,7 @@ def db_init():
 
     print("Initializing Database...")
     set_model_perms(User)
-    set_model_perms(Auth)
     set_model_perms(Post)
-    set_model_perms(Profile, ['edit', 'view'])
     set_model_perms(Group)
     set_model_perms(grp_members, is_table=True)
     set_model_perms(grp_perms, is_table=True)
@@ -153,15 +162,12 @@ def seed_users(num_of_users):
         perms = Permission.query.all()
 
         for user in data.get('results'):
-            u = User()
-
-            u.auth = Auth(password='password')
-            u.auth.username = user.get('login')['username']
-            u.auth.email = user.get('email')
-            u.auth.created_on = random_timestamp(
+            u = User(email=user.get('email'), password='password')
+            u.created_on = random_timestamp(
                 datetime(2020, 3, 1), datetime(2020, 7, 28))
 
             u.profile = Profile()
+            u.profile.username = user.get('login')['username']
             u.profile.name = user.get('name')['first'] + \
                 ' ' + user.get('name')['last']
             u.profile.avatar = user.get('picture')['thumbnail']
@@ -216,72 +222,84 @@ def seed_posts(num_of_posts):
                 blacklistFlags=nsfw,racist,sexist&type=twopart&amount=10',
             headers={'accept': 'application/json'}).json().get('jokes'))
 
-    # try:
-    print('Saving posts to database...')
-    for p in posts1:
-        user = random.choice(users)
+    try:
+        print('Saving posts to database...')
+        for p in posts1:
+            user = random.choice(users)
 
-        tag = p.get('type')
-        tags = [tag, random.choice(tag_list)]
-        body = f"{p.get('setup')} - {p.get('punchline')}"
+            tag = p.get('type')
+            tags = [tag, random.choice(tag_list)]
+            body = f"{p.get('setup')} - {p.get('punchline')}"
 
-        post = Post()
-        post.body = body
-        post.user_id = user.id
+            post = Post()
+            post.body = body
+            post.user_id = user.id
 
-        post.likes.extend(random.sample(users, k=random.randrange(36)))
-        post.created_on = random_timestamp(
-            datetime(2020, 7, 1), datetime(2020, 9, 28))
+            post.likes.extend(random.sample(users, k=random.randrange(36)))
+            post.created_on = random_timestamp(
+                datetime(2020, 7, 1), datetime(2020, 9, 28))
 
-        for t in tags:
-            tag = Tag.query.filter_by(name=t).first()
+            for t in tags:
+                tag = Tag.query.filter_by(name=t).first()
 
-            if tag:
-                post.tags.append(tag)
-            else:
-                tag = Tag(name=t)
-                db.session.add(tag)
-                post.tags.append(tag)
+                if tag:
+                    post.tags.append(tag)
+                else:
+                    tag = Tag(name=t)
+                    db.session.add(tag)
+                    post.tags.append(tag)
 
-        post_objs.append(post)
+            post_objs.append(post)
 
-    for p in posts2:
-        user = random.choice(users)
+        for p in posts2:
+            user = random.choice(users)
 
-        tag = p.get('category').lower()
-        flags = p.get('flags')
-        tags = [key.lower() for key in flags if flags[key] is True]
-        tags.append(tag)
-        if bool(p.get('safe')):
-            tags.append('safe')
+            tag = p.get('category').lower()
+            flags = p.get('flags')
+            tags = [key.lower() for key in flags if flags[key] is True]
+            tags.append(tag)
+            if bool(p.get('safe')):
+                tags.append('safe')
 
-        body = f"{p.get('setup')} - {p.get('delivery')}"
+            body = f"{p.get('setup')} - {p.get('delivery')}"
 
-        post = Post()
-        post.body = body
-        post.user_id = user.id
-        post.created_on = random_timestamp(
-            datetime(2020, 9, 1), datetime(2020, 12, 31))
-        post.likes.extend(random.sample(users, k=random.randrange(30)))
+            post = Post()
+            post.body = body
+            post.user_id = user.id
+            post.created_on = random_timestamp(
+                datetime(2020, 9, 1), datetime(2020, 12, 31))
+            post.likes.extend(random.sample(users, k=random.randrange(30)))
 
-        for t in tags:
-            tag = Tag.query.filter_by(name=t).first()
+            for t in tags:
+                tag = Tag.query.filter_by(name=t).first()
 
-            if tag:
-                post.tags.append(tag)
-            else:
-                tag = Tag(name=t)
-                db.session.add(tag)
-                post.tags.append(tag)
+                if tag:
+                    post.tags.append(tag)
+                else:
+                    tag = Tag(name=t)
+                    db.session.add(tag)
+                    post.tags.append(tag)
 
-        post_objs.append(post)
+            post_objs.append(post)
 
-    db.session.add_all(post_objs)
+        db.session.add_all(post_objs)
+        db.session.commit()
+
+        print(f'Post table seeded with {num_of_posts} posts...')
+    except Exception as error:
+        print(f'Error: {error}')
+
+
+# @cli.command()
+def follow_tags():
+    print('following tags...')
+    tags = Tag.query.all()
+
+    for user in User.query.all():
+        user_tags = random.sample(tags, k=random.randrange(1, 5))
+        user.tags.extend(user_tags)
+        db.session.add(user)
     db.session.commit()
-
-    print(f'Post table seeded with {num_of_posts} posts...')
-    # except Exception as error:
-    #     print(f'Error: {error}')
 
 
 # @seed.command()

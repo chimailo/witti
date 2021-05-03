@@ -1,17 +1,16 @@
 import random
 from sqlalchemy import exc
 from sqlalchemy.sql import func
-from marshmallow import ValidationError
 from flask import url_for, request, jsonify, Blueprint, current_app
 
 from src import db
-from src.utils import urlsafe_base64
-from src.utils.decorators import authenticate
-from src.blueprints.errors import server_error, bad_request, not_found, \
-    error_response
+from src.lib import urlsafe_base64
+from src.lib.auth import authenticate
+from src.blueprints.errors import server_error, bad_request, \
+    not_found, error_response
 from src.blueprints.messages.models import Notification
-from src.blueprints.posts.models import Post, Tag
-from src.blueprints.posts.schema import PostSchema, TagSchema
+from src.blueprints.posts.models import Post
+from src.blueprints.posts.schema import PostSchema
 
 
 posts = Blueprint('posts', __name__, url_prefix='/api')
@@ -29,9 +28,9 @@ def get_featured_posts():
         posts = random.sample(res, k=5)
     except Exception:
         return server_error('Something went wrong, please try again.')
-    
+
     return jsonify(PostSchema(
-        many=True, only=('id', 'body', 'author.username')).dump(posts))
+        many=True, only=('id', 'body', 'author.profile.username')).dump(posts))
 
 
 @posts.route('/posts/<int:post_id>', methods=['GET'])
@@ -108,7 +107,8 @@ def get_posts(user):
 @posts.route('/posts', methods=['GET'])
 @authenticate
 def posts_feed(user):
-    feed = request.args.get('feed')
+    latest = request.args.get('latest')
+    top = request.args.get('top')
     cursor = request.args.get('cursor')
     items_per_page = current_app.config['ITEMS_PER_PAGE']
     nextCursor = None
@@ -136,12 +136,12 @@ def posts_feed(user):
         print(e)
         return server_error('An unexpected error occured, please try again.')
 
-    if cursor == '0' and feed == 'latest':
+    if cursor == '0' and latest:
         query = latest_posts.limit(items_per_page + 1).all()
-    elif cursor == '0' and feed == 'top':
+    elif cursor == '0' and top:
         query = top_posts.limit(items_per_page + 1).all()
     else:
-        if feed == 'latest':
+        if latest:
             cursor = urlsafe_base64(cursor, from_base64=True)
             query = latest_posts.filter(
                 Post.created_on < cursor).limit(items_per_page + 1).all()
@@ -154,7 +154,7 @@ def posts_feed(user):
     if len(query) > items_per_page:
         nextCursor = urlsafe_base64(
             query[items_per_page - 1][0].created_on.isoformat()) \
-                if feed == 'latest' else urlsafe_base64(
+                if latest else urlsafe_base64(
             str(query[items_per_page - 1][1]))
 
     return {
@@ -168,7 +168,6 @@ def posts_feed(user):
 @authenticate
 def create_post(user, post_id=None):
     req_data = request.get_json()
-    print(req_data)
 
     if not req_data:
         return bad_request("No request data provided")
@@ -287,59 +286,9 @@ def get_post_comments(user, post_id):
         comment = c.to_dict(user)
         comment['parent'] = PostSchema(
             only=('id', 'body', 'author',)).dump(c.parent)
-        # comment['author']['isFollowing'] = user.is_following(c.author)
         comments.append(comment)
 
     return {
         'data': comments,
         'nextCursor': nextCursor
     }
-
-
-@posts.route('/tags', methods=['GET'])
-@authenticate
-def get_tags(user):
-    try:
-        tags = Tag.query.all()
-    except Exception as e:
-        print(e)
-        return server_error('An unexpected error occured.')
-    return jsonify(TagSchema(many=True, only=('id', 'name',)).dump(tags))
-
-
-@posts.route('/tags', methods=['POST'])
-@authenticate
-def add_tag(user):
-    req_data = request.get_json()
-
-    if not req_data:
-        return bad_request('No request data provided')
-
-    try:
-        data = TagSchema().load(req_data)
-    except ValidationError as err:
-        print(err)
-        return error_response(422, err.messages)
-
-    name = data.get('name')
-    # check for existing tag
-    tag = Tag.query.filter(Tag.name == name).first()
-
-    if tag:
-        return bad_request(f'Tag with name "{name}" already exists.')
-
-    tag = Tag(name=name)
-
-    try:
-        tag.save()
-    except (exc.IntegrityError, ValueError):
-        db.session.rollback()
-        return server_error('Something went wrong, please try again.')
-    return jsonify(TagSchema().dump(tag))
-
-
-@posts.route('/tag/check', methods=['POST'])
-def check_tag():
-    data = request.get_json()
-    tag = Tag.query.filter_by(name=data.get('tag')).first()
-    return {'res': not isinstance(tag, Tag)}
