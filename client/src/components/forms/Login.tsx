@@ -4,9 +4,7 @@ import {
   createStyles,
   makeStyles,
   Theme,
-  useTheme,
 } from '@material-ui/core/styles';
-import { useLogin } from '../../lib/hooks/user';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

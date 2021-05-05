@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link as RouterLink, useParams, useHistory } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { useQueryClient } from 'react-query';
 
 import Avatar from '@material-ui/core/Avatar';
@@ -12,8 +12,9 @@ import CakeOutlinedIcon from '@material-ui/icons/CakeOutlined';
 import CalendarTodayOutlinedIcon from '@material-ui/icons/CalendarTodayOutlined';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import { User } from '../../types';
-import { KEYS, ROUTES } from '../../lib/constants';
+import { KEYS } from '../../lib/constants';
 import { useFollowUser } from '../../lib/hooks/user';
+import EditProfileModal from '../modals/EditProfile';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -53,14 +54,15 @@ interface IProps {
 }
 
 export default function ProfileCard({ user, page, meta, cacheKey }: IProps) {
+  const [isOpen, setModalOpen] = useState(false)
   const classes = useStyles();
-  const history = useHistory()
   const { username } = useParams<{ username: string }>();
   const follow = useFollowUser();
   const queryClient = useQueryClient();
   const auth = queryClient.getQueryData<User>(KEYS.AUTH);
 
   return (
+    <>
     <Paper elevation={0} classes={{ root: classes.paper }}>
       <Box display='flex'>
         <Avatar
@@ -97,7 +99,7 @@ export default function ProfileCard({ user, page, meta, cacheKey }: IProps) {
                 size='small'
                 disableElevation
                 style={{ textTransform: 'capitalize' }}
-                onClick={() => history.push(`/${user.profile.username}/edit`)}
+                onClick={() => setModalOpen(true)}
               >
                 Edit Profile
               </Button>
@@ -212,5 +214,7 @@ export default function ProfileCard({ user, page, meta, cacheKey }: IProps) {
             </>)}</Box>
       </Box>
     </Paper>
+    <EditProfileModal isOpen={isOpen} user={user} handleClose={() => setModalOpen(false)} />
+    </>
   );
 }

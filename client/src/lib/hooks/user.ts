@@ -93,23 +93,31 @@ export function useSetProfile() {
 
   if (token) setAuthToken(token);
 
-  return useMutation(async ({values}: {values: Pick<Profile, 'name' | 'dob' | 'avatar' | 'bio' | 'username'>; cacheKey?: string}) => {
-    const res = await axios.put('/profile', JSON.stringify(values))
+  return useMutation(
+    async ({
+      values
+    }: {
+      values: Omit<Profile, 'created_on' | 'updated_on'>; cacheKey: string
+    }) => {
+    console.log(values.dob)
+    const res: AxiosResponse<Profile> = await axios.put(
+      '/profile',
+      // @ts-expect-error
+      {...values, dob: new Date(values.dob)}
+    )
     return res.data
   },
   {
-    onMutate: ({cacheKey, values}) => {
-      if (!cacheKey) return
+    onMutate: ({cacheKey, values}) => 
       // @ts-expect-error
-      return queryClient.setQueryData<Profile>(cacheKey, oldData => ({
+      queryClient.setQueryData<Profile>(cacheKey, oldData => ({
         ...oldData,
         name: values.name,
         username: values.username,
         bio: values.bio,
         dob: values.dob,
         avatar: values.avatar,
-      }))
-    },
+      })),
     onError: (error: AxiosError<APIError>) => {
       console.log(error)
     }

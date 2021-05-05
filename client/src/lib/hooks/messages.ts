@@ -38,7 +38,7 @@ export function useInfiniteChatMessages(username: string) {
       return res.data;
     },
     {
-      // refetchInterval: REFETCH_INTERVAL,
+      refetchInterval: REFETCH_INTERVAL,
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? false,
     }
   );

@@ -45,6 +45,7 @@ def get_profile(user, username):
 @authenticate
 def update_profile(user):
     request_data = request.get_json()
+    print(request_data)
 
     if not request_data:
         return bad_request("No input data provided")

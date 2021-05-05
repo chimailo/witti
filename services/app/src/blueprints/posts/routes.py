@@ -30,7 +30,7 @@ def get_featured_posts():
         return server_error('Something went wrong, please try again.')
 
     return jsonify(PostSchema(
-        many=True, only=('id', 'body', 'author.profile.username')).dump(posts))
+        many=True, only=('id', 'body', 'author.profile')).dump(posts))
 
 
 @posts.route('/posts/<int:post_id>', methods=['GET'])

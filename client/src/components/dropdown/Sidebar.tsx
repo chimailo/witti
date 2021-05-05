@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink, useHistory } from 'react-router-dom';
 import { useQueryClient } from 'react-query';
 import Avatar from '@material-ui/core/Avatar';
@@ -12,6 +12,7 @@ import Typography from '@material-ui/core/Typography';
 import EditIcon from '@material-ui/icons/Edit';
 import PersonOutlineIcon from '@material-ui/icons/PersonOutline';
 import SettingsOutlinedIcon from '@material-ui/icons/SettingsOutlined';
+import EditProfileModal from '../modals/EditProfile';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import { KEYS, ROUTES } from '../../lib/constants';
 import { User } from '../../types';
@@ -63,6 +64,7 @@ export default function SidebarMenu({
   anchorEl,
   handleClose,
 }: MenuProps) {
+  const [isOpen, setModalOpen] = useState(false)
   const classes = useStyles();
   const history = useHistory();
   const queryClient = useQueryClient();
@@ -75,6 +77,7 @@ export default function SidebarMenu({
   };
 
   return (
+    <>
     <div>
       <Menu
         id='user-menu'
@@ -123,19 +126,17 @@ export default function SidebarMenu({
             <ListItemText primary='Profile' />
           </MuiLink>
         </MenuItem>
-        <MenuItem onClick={handleClose} classes={{ root: classes.menuItem }}>
-          <MuiLink
-            color='inherit'
-            underline='none'
-            component={RouterLink}
-            className={classes.link}
-            to={`/${user?.profile.username}/edit`}
-          >
-            <ListItemIcon className={classes.listItemIcon}>
-              <EditIcon fontSize='small' />
-            </ListItemIcon>
-            <ListItemText primary='Edit Profile' />
-          </MuiLink>
+        <MenuItem
+          classes={{ root: classes.menuItem }}
+          onClick={() => {
+            handleClose()
+            setModalOpen(true)
+          }}
+        >
+          <ListItemIcon className={classes.listItemIcon}>
+            <EditIcon fontSize='small' />
+          </ListItemIcon>
+          <ListItemText primary='Edit Profile' />
         </MenuItem>
         <MenuItem onClick={handleClose} classes={{ root: classes.menuItem }}>
           <MuiLink
@@ -157,5 +158,7 @@ export default function SidebarMenu({
         </MenuItem>
       </Menu>
     </div>
+    <EditProfileModal isOpen={isOpen} user={user!} handleClose={() => setModalOpen(false)} />
+    </>
   );
 }

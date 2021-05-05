@@ -43,7 +43,7 @@ export default function PostContent({ post, postPage }: PostContentProps) {
   );
 }
 
-function Body({ post, postPage }: { post: string; postPage?: boolean }) {
+export function Body({ post, postPage, dark }: { post: string; postPage?: boolean; dark?: boolean }) {
   const options = {
     inlineStyles: {
       ITALIC: {
@@ -71,7 +71,7 @@ function Body({ post, postPage }: { post: string; postPage?: boolean }) {
   
   return post.match('({"blocks":)') ? (
     <Typography
-      color='textPrimary'
+      color={dark ? 'secondary' : 'textPrimary'}
       component='p'
       gutterBottom
       variant={postPage ? 'h6' : 'subtitle1'}
@@ -81,7 +81,7 @@ function Body({ post, postPage }: { post: string; postPage?: boolean }) {
     />
   ) : (
     <Typography
-      color='textPrimary'
+      color={dark ? 'secondary' : 'textPrimary'}
       component='p'
       gutterBottom
       variant={postPage ? 'h6' : 'subtitle1'}

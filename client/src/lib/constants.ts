@@ -1,4 +1,4 @@
-export const REFETCH_INTERVAL = 10000;
+export const REFETCH_INTERVAL = 1000;
 
 // query keys
 const AUTH = 'auth';

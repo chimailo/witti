@@ -23,6 +23,7 @@ import {
 import hero from '../../hero.jpg';
 import Logo from '../../components/svg/logo';
 import { CenteredLoading } from '../../components/Loading';
+import {Body} from '../../components/Post/Content'
 import { ROUTES } from '../../lib/constants';
 import { Post } from '../../types';
 import { QuoteIcon } from '../../components/svg';
@@ -233,7 +234,7 @@ function FeaturedPostsCarousel({ posts }: { posts: Post[] }) {
                 marginRight: theme.spacing(2),
               }}
             />
-            {post.body}
+            <Body post={post.body} dark />
           </Typography>
           <Typography
             variant='subtitle2'
@@ -241,7 +242,8 @@ function FeaturedPostsCarousel({ posts }: { posts: Post[] }) {
             color='secondary'
             component='p'
           >
-            - {post.author.username}
+            - { // @ts-expect-error
+             post.author.profile.username}
           </Typography>
         </>
       ))}

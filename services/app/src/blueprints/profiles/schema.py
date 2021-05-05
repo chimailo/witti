@@ -14,7 +14,7 @@ class ProfileSchema(Schema):
         error_messages={"required": "Name is required."}
     )
     avatar = fields.Url(validate=validate.Length(max=255))
-    dob = fields.Date(validate=validate.Length(max=255))
+    dob = fields.Str(validate=validate.Length(min=16, max=32))
     bio = fields.Str()
     created_on = fields.DateTime(dump_only=True)
     updated_on = fields.DateTime(dump_only=True)

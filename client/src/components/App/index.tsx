@@ -12,7 +12,6 @@ import Notifications from '../../pages/Notifications';
 import Messages from '../../pages/Messages';
 import Post from '../../pages/Post';
 import Profile from '../../pages/Profile';
-import EditProfile from '../../pages/Profile/Edit';
 import Followers from '../../pages/Profile/Followers';
 import Following from '../../pages/Profile/Following';
 import Chat from '../../pages/Chat';
@@ -56,9 +55,6 @@ export default function App() {
         </PrivateRoute>  
         <PrivateRoute exact path={ROUTES.PROFILE}>
           <Profile />
-        </PrivateRoute>
-        <PrivateRoute exact path={ROUTES.EDIT_PROFILE}>
-          <EditProfile />
         </PrivateRoute>
         <PrivateRoute exact path={ROUTES.FOLLOWERS}>
           <Followers />

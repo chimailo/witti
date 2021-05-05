@@ -11,7 +11,7 @@ import useMediaQuery from '@material-ui/core/useMediaQuery';
 import useTheme from '@material-ui/core/styles/useTheme';
 import ClearIcon from '@material-ui/icons/Clear';
 
-import Editor from '../Editor';
+import {PostEditor} from '../Editor';
 import TagForm from '../forms/Tag';
 import { Tag } from '../../types';
 import { useAllTags, useAddTag } from '../../lib/hooks/posts';
@@ -76,7 +76,7 @@ function CreatePostModal(props: CreatePostModalProps) {
       </DialogTitle>
       <Divider />
       <DialogContent style={{ padding: 0 }}>
-        <Editor
+        <PostEditor
           tags={tags}
           setTags={setTags}
           selectedTags={selectedTags}
