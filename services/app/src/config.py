@@ -13,14 +13,14 @@ class BaseConfig:
     TESTING = False
     TOKEN_EXPIRATION_DAYS = 30
     TOKEN_EXPIRATION_SECONDS = 0
+    ES_HOST = os.environ.get('ES_HOST')
+    ES_PORT = os.environ.get('ES_PORT')
+    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
 
 
 class DevelopmentConfig(BaseConfig):
     """Development configuration"""
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_DEV_URL')
-    ES_HOST = os.environ.get('ES_HOST')
-    ES_PORT = os.environ.get('ES_PORT')
-    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
 
 
