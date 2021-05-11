@@ -2,9 +2,9 @@ import pytest
 
 from src import create_app, db as _db
 from src.config import TestingConfig
-from src.utils.perms import set_model_perms
-from src.tests.utils import add_user, add_group, add_post, add_comment
-from src.blueprints.auth.models import User
+from src.lib.perms import set_model_perms
+from src.tests.utils import add_user, add_post, add_comment
+from src.blueprints.users.models import User
 from src.blueprints.posts.models import Post
 from src.blueprints.admin.models import Group
 
@@ -58,7 +58,7 @@ def db(app):
     return _db
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def session(db):
     """
     Allow very fast tests by using rollbacks and nested sessions.
@@ -106,23 +106,6 @@ def users(db, session):
 
 
 @pytest.fixture(scope='function')
-def groups(db, session, users):
-    """
-    Create group fixtures. They reset per test.
-
-    :param db: Pytest fixture
-    :return: SQLAlchemy database session
-    """
-    db.session.query(Group).delete()
-
-    add_group(name='test group 1')
-    add_group(name='test group 3')
-    add_group(name='test group 2')
-
-    return db
-
-
-@pytest.fixture(scope='function')
 def token(users):
     """
     Serialize a JWT token.
@@ -130,8 +113,8 @@ def token(users):
     :param db: Pytest fixture
     :return: JWT token
     """
-    user = User.find_by_identity('adminuser@test.com')
-    return user.encode_auth_token(user.id).decode()
+    user = User.find_by_email('adminuser@test.com')
+    return user.encode_auth_token()
 
 
 @pytest.fixture(scope='function')
@@ -144,9 +127,9 @@ def posts(db, session, users):
     """
     db.session.query(Post).delete()
 
-    u1 = User.find_by_identity('adminuser@test.com')
-    u2 = User.find_by_identity('regularuser@test.com')
-    u3 = User.find_by_identity('commonuser@test.com')
+    u1 = User.find_by_email('adminuser@test.com')
+    u2 = User.find_by_email('regularuser@test.com')
+    u3 = User.find_by_email('commonuser@test.com')
 
     c1 = add_comment(
         'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u1.id)

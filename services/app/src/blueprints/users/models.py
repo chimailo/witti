@@ -10,30 +10,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from src import db
 from src.lib.mixins import ResourceMixin, SearchableMixin
 from src.blueprints.posts.models import Post, post_tags
-from src.blueprints.admin.models import Permission
 from src.blueprints.messages.models import Message, Chat, \
     LastReadMessage, Notification
-
-
-user_perms = db.Table(
-    'user_permissions',
-    db.Column(
-        'user_id',
-        db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE', onupdate='CASCADE'),
-        primary_key=True
-    ),
-    db.Column(
-        'perm_id',
-        db.Integer,
-        db.ForeignKey(
-            'permissions.id',
-            ondelete='CASCADE',
-            onupdate='CASCADE'
-        ),
-        primary_key=True
-    )
-)
 
 
 followers = db.Table(
@@ -122,12 +100,6 @@ class User(db.Model, ResourceMixin, SearchableMixin):
         backref='user',
         cascade='all, delete-orphan',
         foreign_keys='Notification.doer_id'
-    )
-    permissions = db.relationship(
-        'Permission',
-        secondary=user_perms,
-        backref=db.backref('users', lazy='dynamic'),
-        lazy='dynamic'
     )
 
     def __init__(self, **kwargs):
@@ -305,49 +277,3 @@ class User(db.Model, ResourceMixin, SearchableMixin):
     def delete_message_for_me(self, message):
         self.deleted_messages.append(message)
         self.save()
-
-    def user_has_perm(self, perm):
-        return self.permissions.filter(
-            user_perms.c.perm_id == perm.id).count() > 0
-
-    def add_permissions(self, perms):
-        for perm in perms:
-            if not self.user_has_perm(perm):
-                self.permissions.append(perm)
-                self.save()
-
-    def remove_permissions(self, perms):
-        for perm in perms:
-            if self.user_has_perm(perm):
-                self.permissions.remove(perm)
-                self.save()
-
-    def get_perms(self):
-        perms = []
-
-        for perm in self.permissions:
-            perms.append(perm)
-
-        return perms
-
-    def get_all_perms(self):
-        perms = []
-
-        for group in self.groups:
-            for perm in group.permissions:
-                perms.append(perm)
-
-        return list(set(perms).union(set(self.get_perms())))
-
-    def has_permission(self, name):
-        perm = Permission.find_by_name(name)
-        return perm in self.get_all_perms()
-
-    def has_permissions(self, perms_list):
-        perms = []
-
-        for perm in perms_list:
-            p = Permission.find_by_name(perm)
-            perms.append(p)
-
-        return set(perms).issubset(set(self.get_all_perms()))

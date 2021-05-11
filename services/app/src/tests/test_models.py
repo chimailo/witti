@@ -1,6 +1,6 @@
 # from flask import current_app
 from src import db
-from src.blueprints.auth.models import User
+from src.blueprints.users.models import User
 from src.blueprints.profiles.models import Profile
 from src.blueprints.admin.models import Group, Permission
 

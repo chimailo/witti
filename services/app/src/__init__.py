@@ -48,7 +48,6 @@ def create_app(config=app_settings):
     # Register Blueprint
     from src.blueprints.errors import errors
     from src.blueprints.search import search
-    from src.blueprints.admin.routes import admin
     from src.blueprints.profiles.routes import profile
     from src.blueprints.tags.routes import tags
     from src.blueprints.posts.routes import posts
@@ -59,7 +58,6 @@ def create_app(config=app_settings):
     app.register_blueprint(posts)
     app.register_blueprint(tags)
     app.register_blueprint(profile)
-    app.register_blueprint(admin)
     app.register_blueprint(search)
     app.register_blueprint(errors)
     app.register_blueprint(messages)
@@ -69,7 +67,6 @@ def create_app(config=app_settings):
     from src.blueprints.tags.models import Tag
     from src.blueprints.profiles.models import Profile
     from src.blueprints.messages.models import Message, Chat
-    from src.blueprints.admin.models import Group, Permission, Model
 
     @app.shell_context_processor
     def ctx():
@@ -83,9 +80,6 @@ def create_app(config=app_settings):
             "Tag": Tag,
             "Message": Message,
             "Chat": Chat,
-            "Group": Group,
-            "Permission": Permission,
-            "Model": Model,
         }
 
     return app

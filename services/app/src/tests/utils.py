@@ -1,6 +1,6 @@
 from src.blueprints.profiles.models import Profile
-from src.blueprints.auth.models import User
-from src.blueprints.posts.models import Comment, Post
+from src.blueprints.users.models import User
+from src.blueprints.posts.models import Post
 from src.blueprints.admin.models import Group
 
 
@@ -14,14 +14,13 @@ def add_user(
         is_active=True,
         permissions=[]):
 
-    profile = Profile(name=name, bio=bio)
+    profile = Profile(name=name, bio=bio, username=username)
     profile.avatar = avatar or profile.set_avatar(email)
 
     user = User(password='password')
     user.email = email
-    user.username = username
     user.is_admin = is_admin
-    user.is_active = is_active
+    # user.is_active = is_active
     user.add_permissions(permissions)
     user.profile = profile
 
@@ -56,9 +55,9 @@ def add_comment(body, user_id, post_id=None, comment_id=None):
     return comment
 
 
-def add_group(name, description='', members=[], permissions=[]):
-    group = Group(name=name, description=description)
-    group.add_members(members)
-    group.add_permissions(permissions)
-    group.save()
-    return group
+# def add_group(name, description='', members=[], permissions=[]):
+#     group = Group(name=name, description=description)
+#     group.add_members(members)
+#     group.add_permissions(permissions)
+#     group.save()
+#     return group

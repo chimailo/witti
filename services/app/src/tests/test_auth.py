@@ -1,11 +1,9 @@
 import json
 
-from src.blueprints.auth.models import User
-
 
 def test_check_email_does_not_exist(client, users):
     response = client.post(
-        '/api/auth/check-email',
+        '/api/users/check-email',
         data=json.dumps({'email': 'testuser@test.com'}),
         content_type='application/json'
     )
@@ -16,7 +14,7 @@ def test_check_email_does_not_exist(client, users):
 
 def test_check_email_do_exist(client, users):
     response = client.post(
-        '/api/auth/check-email',
+        '/api/users/check-email',
         data=json.dumps({'email': 'adminuser@test.com'}),
         content_type='application/json'
     )
@@ -25,31 +23,9 @@ def test_check_email_do_exist(client, users):
     assert data.get('res') is False
 
 
-def test_check_username_does_not_exist(client, users):
-    response = client.post(
-        '/api/auth/check-username',
-        content_type='application/json',
-        data=json.dumps({'username': 'user'}),
-    )
-    data = json.loads(response.data.decode())
-    assert response.status_code == 200
-    assert data.get('res') is True
-
-
-def test_check_username_do_exist(client, users):
-    response = client.post(
-        '/api/auth/check-username',
-        content_type='application/json',
-        data=json.dumps({'username': 'regularuser'}),
-    )
-    data = json.loads(response.data.decode())
-    assert response.status_code == 200
-    assert data.get('res') is False
-
-
 def test_register_user_no_data(client):
     response = client.post(
-        '/api/auth/register',
+        '/api/users/register',
         data=json.dumps({}),
         content_type='application/json'
     )
@@ -58,7 +34,7 @@ def test_register_user_no_data(client):
 
 def test_register_user_invalid_data(client):
     response = client.post(
-        '/api/auth/register',
+        '/api/users/register',
         data=json.dumps({
             'name': 'test',
             'username': 'test',
@@ -75,7 +51,7 @@ def test_register_user_invalid_data(client):
 
 def test_register_user_valid(client, db):
     response = client.post(
-        '/api/auth/register',
+        '/api/users/register',
         data=json.dumps({
             'username': 'common',
             'name': 'user',
@@ -91,28 +67,23 @@ def test_register_user_valid(client, db):
 
 
 def test_valid_user_login(client, users):
-    user = User.find_by_identity('regularuser@test.com')
-    old_sign_in_count = user.sign_in_count
-
     response = client.post(
-        '/api/auth/login',
+        '/api/users/login',
         data=json.dumps({
-            'identity': 'regularuser@test.com',
+            'email': 'regularuser@test.com',
             'password': 'password'
         }),
         content_type='application/json'
     )
     data = json.loads(response.data.decode())
-    new_sign_in_count = user.sign_in_count
 
     assert response.status_code == 200
     assert isinstance(data.get('token'), str) is True
-    assert (old_sign_in_count + 1) == new_sign_in_count
 
 
 def test_login_user_incorrect_password(client, users):
     response = client.post(
-        '/api/auth/login',
+        '/api/users/login',
         data=json.dumps({
             'email': 'regularuser@test.com',
             'password': 'asecret'
@@ -121,13 +92,13 @@ def test_login_user_incorrect_password(client, users):
     )
     data = json.loads(response.data.decode())
     assert response.status_code == 401
-    assert 'Invalid credentials' in data.get('message')
+    assert 'Incorrect email or password.' in data.get('message')
     assert data.get('token') is None
 
 
 def test_invalid_user_login(client, users):
     response = client.post(
-        '/api/auth/login',
+        '/api/users/login',
         data=json.dumps({
             'email': 'userest.host',
             'password': 'password'
@@ -136,13 +107,13 @@ def test_invalid_user_login(client, users):
     )
     data = json.loads(response.data.decode())
     assert response.status_code == 401
-    assert 'Invalid credentials' in data.get('message')
+    assert 'Incorrect email or password.' in data.get('message')
     assert data.get('token') is None
 
 
 def test_logout_user(client, token):
     response = client.get(
-        '/api/auth/logout',
+        '/api/users/logout',
         headers={'Authorization': f'Bearer {token}'}
     )
     data = json.loads(response.data.decode())
@@ -152,11 +123,10 @@ def test_logout_user(client, token):
 
 def test_get_user(client, token):
     response = client.get(
-        '/api/auth/user',
+        '/api/users/auth',
         headers={'Authorization': f'Bearer {token}'}
     )
     data = json.loads(response.data.decode())
     assert response.status_code == 200
     assert isinstance(data, dict) is True
-    assert data.get('username') == 'adminuser'
     assert data.get('profile')['name'] == 'admin'

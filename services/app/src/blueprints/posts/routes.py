@@ -44,7 +44,7 @@ def get_post(user, post_id):
     except Exception:
         return server_error('Something went wrong, please try again.')
     else:
-        post_dict = PostSchema().dump(post)
+        post_dict = post.to_dict(user)
         post_dict['isLiked'] = post.is_liked_by(user)
 
         if user.id != post.author.id:

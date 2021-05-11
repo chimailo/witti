@@ -9,17 +9,12 @@ from sqlalchemy import exc, and_
 from flask.cli import FlaskGroup
 
 from src import create_app, db
-from src.lib.perms import set_model_perms
 from src.lib.search import add_to_index, TagsIndex, UsersIndex
 from src.blueprints.users.models import User
 from src.blueprints.posts.models import Post
 from src.blueprints.profiles.models import Profile
 from src.blueprints.tags.models import Tag
 from src.blueprints.messages.models import Message, Chat, LastReadMessage
-from src.blueprints.admin.models import Group
-from src.blueprints.admin.models import Permission
-from src.blueprints.admin.models import grp_members, grp_perms
-from src.blueprints.users.models import user_perms
 
 app = create_app()
 cli = FlaskGroup(create_app=create_app)
@@ -125,25 +120,18 @@ def seed_db(num_of_users, num_of_posts, num_of_comments):
     seed_messages()
 
 
+# @cli.command()
 def db_init():
     """Initialize the database."""
     db.drop_all()
     db.create_all()
     db.session.commit()
-
-    print("Initializing Database...")
-    set_model_perms(User)
-    set_model_perms(Post)
-    set_model_perms(Group)
-    set_model_perms(grp_members, is_table=True)
-    set_model_perms(grp_perms, is_table=True)
-    set_model_perms(user_perms, is_table=True)
-
     print("Database was successfully initialized...")
     return None
 
 
-# @seed.command()
+# @click.argument("num_of_users", default=150)
+# @cli.command()
 def seed_users(num_of_users):
     """
     Seed the database with users.
@@ -159,7 +147,6 @@ def seed_users(num_of_users):
         ).json()
 
         users = []
-        perms = Permission.query.all()
 
         for user in data.get('results'):
             u = User(email=user.get('email'), password='password')
@@ -179,9 +166,6 @@ def seed_users(num_of_users):
                         I am a {user.get('dob')['age']} yrs old, who likes \
                             to tell jokes."
             u.profile.created_on = u.created_on
-            
-            u.permissions.extend(random.sample(
-                perms, k=random.randrange(len(perms))))
             users.append(u)
 
         print('Setting up followers/following...')
@@ -218,7 +202,7 @@ def seed_posts(num_of_posts):
 
     for i in range(int(num_of_posts/15)):
         posts2.extend(requests.get(
-            f'https://sv443.net/jokeapi/v2/joke/Any?\
+            'https://sv443.net/jokeapi/v2/joke/Any?\
                 blacklistFlags=nsfw,racist,sexist&type=twopart&amount=10',
             headers={'accept': 'application/json'}).json().get('jokes'))
 
@@ -416,35 +400,6 @@ def seed_messages():
     print('Saving to database...')
     db.session.add_all(messages)
     db.session.commit()
-
-
-# @cli.command()
-def seed_groups():
-    """
-    Seed the database with a few groups.
-    """
-    try:
-        groups = [
-            'partner',
-            'junior partner',
-            'senior associate',
-            'associate',
-            'paralegal'
-        ]
-        users = User.query.limit(24).all()
-        perms = Permission.query.all()
-
-        for group in groups:
-            grp = Group(name=group)
-            grp.members.extend(random.sample(
-                users, k=random.randrange(len(users))))
-            grp.permissions.extend(random.sample(
-                perms, k=random.randrange(len(perms))))
-            grp.save()
-
-        print(f'Added users to {len(groups)} groups...')
-    except Exception as error:
-        print(f'Error: {error}')
 
 
 if __name__ == '__main__':

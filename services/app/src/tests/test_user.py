@@ -2,7 +2,7 @@ import json
 
 from src import create_app
 from src.config import TestingConfig
-from src.blueprints.auth.models import User
+from src.blueprints.users.models import User
 
 
 app = create_app(config=TestingConfig)
@@ -28,39 +28,6 @@ def test_unfollow(client, users, token):
     data = json.loads(response.data.decode())
     assert response.status_code == 200
     assert isinstance(data, list) is True
-
-
-def test_get_all_following(client, token):
-    response = client.get(
-        '/api/users/following',
-        headers={'Authorization': f'Bearer {token}'}
-    )
-    data = json.loads(response.data.decode())
-    assert response.status_code == 200
-    assert isinstance(data, list) is True
-    assert len(data) == 0
-
-
-def test_get_all_followers(client, token):
-    response = client.get(
-        '/api/users/followers',
-        headers={'Authorization': f'Bearer {token}'}
-    )
-    data = json.loads(response.data.decode())
-    assert response.status_code == 200
-    assert isinstance(data, list) is True
-    assert len(data) == 1
-
-
-def test_get_all_likes(client, token, posts):
-    response = client.get(
-        '/api/users/likes',
-        headers={'Authorization': f'Bearer {token}'}
-    )
-    data = json.loads(response.data.decode())
-    assert response.status_code == 200
-    assert isinstance(data, list) is True
-    assert len(data) == 2
 
 
 def test_get_followers(client, token):

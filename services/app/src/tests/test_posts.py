@@ -68,17 +68,6 @@ def test_update_post(client, token, posts):
     assert isinstance(data, dict) is True
 
 
-def test_update_post_invalid(client, token, posts):
-    post = Post.query.all()[-1]
-    response = client.put(
-        f'/api/posts/{post.id}',
-        data=json.dumps({'post': 'ullamco laboris nisi ut'}),
-        headers={'Authorization': f'Bearer {token}'},
-        content_type='application/json'
-    )
-    assert response.status_code == 401
-
-
 def test_delete_post(client, token, posts):
     post = Post.query.all()[0]
     response = client.delete(

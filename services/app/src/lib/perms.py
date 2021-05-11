@@ -2,7 +2,7 @@ import os
 from sqlalchemy import exc
 
 from src import db, create_app
-from src.blueprints.admin.models import Permission, Model
+# from src.blueprints.admin.models import Permission, Model
 
 app = create_app(os.getenv('APP_SETTINGS'))
 

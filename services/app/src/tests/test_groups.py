@@ -2,7 +2,7 @@ import json
 
 from src import create_app
 from src.config import TestingConfig
-from src.blueprints.auth.models import User
+from src.blueprints.users.models import User
 from src.blueprints.admin.models import Group, Permission
 
 app = create_app(config=TestingConfig)

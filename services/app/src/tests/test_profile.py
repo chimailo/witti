@@ -1,6 +1,28 @@
 import json
 
 
+def test_check_username_does_not_exist(client, users):
+    response = client.post(
+        '/api/profile/check-username',
+        content_type='application/json',
+        data=json.dumps({'username': 'user'}),
+    )
+    data = json.loads(response.data.decode())
+    assert response.status_code == 200
+    assert data.get('res') is True
+
+
+def test_check_username_do_exist(client, users):
+    response = client.post(
+        '/api/profile/check-username',
+        content_type='application/json',
+        data=json.dumps({'username': 'regularuser'}),
+    )
+    data = json.loads(response.data.decode())
+    assert response.status_code == 200
+    assert data.get('res') is False
+
+
 def test_get_profile(client, users, token):
     response = client.get(
         '/api/profile/adminuser',
