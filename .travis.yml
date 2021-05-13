@@ -19,8 +19,8 @@ before_script:
   - docker-compose up --build -d
 
 script:
-  # - docker-compose exec users python manage.py test
-  - docker-compose exec users python manage.py flake8
+  # - docker-compose exec app python manage.py test
+  - docker-compose exec app python manage.py flake8
   - docker-compose exec client npm test -- --coverage
 
 after_script:
