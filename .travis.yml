@@ -21,7 +21,7 @@ before_script:
 script:
   # - docker-compose exec app python manage.py test
   - docker-compose exec app python manage.py flake8
-  - docker-compose exec client npm test -- --coverage
+  # - docker-compose exec client npm test -- --coverage
 
 after_script:
   - docker-compose down
