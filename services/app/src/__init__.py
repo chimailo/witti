@@ -66,7 +66,7 @@ def create_app(config=app_settings):
     from src.blueprints.posts.models import Post
     from src.blueprints.tags.models import Tag
     from src.blueprints.profiles.models import Profile
-    from src.blueprints.messages.models import Message, Chat
+    from src.blueprints.messages.models import Message, Chat, Notification
 
     @app.shell_context_processor
     def ctx():
@@ -80,6 +80,7 @@ def create_app(config=app_settings):
             "Tag": Tag,
             "Message": Message,
             "Chat": Chat,
+            "Notification": Notification,
         }
 
     return app

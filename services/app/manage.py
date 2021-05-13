@@ -75,7 +75,7 @@ def index_search_fields():
     default=True,
     help="Skip __init__.py files?"
 )
-@click.argument("path", default="app")
+@click.argument("path", default="src")
 def flake8(skip_init, path):
     """
     Run flake8 to analyze your code base.
@@ -89,7 +89,7 @@ def flake8(skip_init, path):
     if skip_init:
         flake8_flag_exclude = " --exclude __init__.py"
 
-    cmd = f"flake8 {path}{flake8_flag_exclude} --ignore E128 E402 f401"
+    cmd = f"flake8 {path}{flake8_flag_exclude} --ignore E128,E126,W504,F821"
     return subprocess.call(cmd, shell=True)
 
 

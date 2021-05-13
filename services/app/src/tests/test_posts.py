@@ -55,19 +55,6 @@ def test_create_post(client, token):
     assert isinstance(data, dict) is True
 
 
-def test_update_post(client, token, posts):
-    post = Post.query.all()[0]
-    response = client.put(
-        f'/api/posts/{post.id}',
-        data=json.dumps({'post': 'ullamco laboris nisi ut'}),
-        headers={'Authorization': f'Bearer {token}'},
-        content_type='application/json'
-    )
-    data = json.loads(response.data.decode())
-    assert response.status_code == 200
-    assert isinstance(data, dict) is True
-
-
 def test_delete_post(client, token, posts):
     post = Post.query.all()[0]
     response = client.delete(
@@ -194,5 +181,3 @@ def test_like_comment(client, token, posts):
     data = json.loads(response.data.decode())
     assert response.status_code == 200
     assert isinstance(data, dict) is True
-
-

@@ -36,6 +36,20 @@ services:
     expose:
       - 5000
 
+  client:
+    build:
+      context: ./services/client
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - REACT_APP_API_URL=${REACT_APP_API_URL}
+    container_name: client
+    depends_on:
+      - app
+    ports:
+      - '3000:80'
+    stdin_open: true
+
   nginx:
     build:
       context: ./services/nginx

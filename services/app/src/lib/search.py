@@ -26,7 +26,8 @@ def add_to_index(doc, model):
 
     if model.__tablename__ == 'users':
         for i in model.query:
-            doc(_id=i.id, name=i.profile.name, username=i.profile.username).save()
+            doc(_id=i.id, name=i.profile.name,
+                username=i.profile.username).save()
     else:
         for i in model.query:
             doc(_id=i.id, name=i.name).save()

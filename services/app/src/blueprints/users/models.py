@@ -41,7 +41,7 @@ user_tags = db.Table(
     db.Column(
         'tag_id',
         db.Integer,
-        db.ForeignKey('tags.id', ondelete='CASCADE',  onupdate='CASCADE'),
+        db.ForeignKey('tags.id', ondelete='CASCADE', onupdate='CASCADE'),
         primary_key=True
     )
 )
@@ -57,7 +57,7 @@ deleted_msgs = db.Table(
     db.Column(
         'message_id',
         db.Integer,
-        db.ForeignKey('messages.id', ondelete='CASCADE',  onupdate='CASCADE'),
+        db.ForeignKey('messages.id', ondelete='CASCADE', onupdate='CASCADE'),
         primary_key=True
     )
 )
@@ -199,7 +199,7 @@ class User(db.Model, ResourceMixin, SearchableMixin):
             return liked_posts.all()
 
         return [User.find_by_id(random.randrange(
-            User.query.count())) for _ in range(count)] 
+            User.query.count())) for _ in range(count)]
 
     def get_followed_posts(self):
         followed_users_posts = db.session.query(Post.id).join(
@@ -248,7 +248,7 @@ class User(db.Model, ResourceMixin, SearchableMixin):
         return Message.query.join(Chat.messages).filter(
             and_(Chat.user1_id == self.id, Chat.user2_id == user.id) |
             and_(Chat.user1_id == user.id, Chat.user2_id == self.id)).except_(
-                    self.deleted_messages).order_by(Message.created_on.desc())
+                self.deleted_messages).order_by(Message.created_on.desc())
 
     def get_chat_last_messages(self):
         '''Get the last messages in all chats with self.'''

@@ -14,7 +14,7 @@ post_likes = db.Table(
     db.Column(
         'post_id',
         db.Integer,
-        db.ForeignKey('posts.id', ondelete='CASCADE',  onupdate='CASCADE'),
+        db.ForeignKey('posts.id', ondelete='CASCADE', onupdate='CASCADE'),
         primary_key=True
     )
 )
@@ -31,7 +31,7 @@ post_tags = db.Table(
     db.Column(
         'post_id',
         db.Integer,
-        db.ForeignKey('posts.id', ondelete='CASCADE',  onupdate='CASCADE'),
+        db.ForeignKey('posts.id', ondelete='CASCADE', onupdate='CASCADE'),
         primary_key=True
     )
 )

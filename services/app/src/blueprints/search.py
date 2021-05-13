@@ -59,8 +59,8 @@ def msg_Search(user):
         print(e)
         return server_error('An unexpected error occured, please try again.')
     return {
-            'users': UserSchema(
-                many=True,
-                only=('id', 'auth.username', 'profile.name', 'profile.avatar')
-            ).dump(users),
+        'users': UserSchema(
+            many=True,
+            only=('id', 'auth.username', 'profile.name', 'profile.avatar')
+        ).dump(users),
     }

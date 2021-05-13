@@ -1,0 +1,16 @@
+.hashtag,
+.hashtag:visited {
+  color: #5e93c5;
+  font-family: cursive;
+}
+
+.hashtag:hover,
+.hashtag:focus {
+  color: #7eadda;
+  outline: 0; /* reset for :focus */
+  cursor: pointer;
+}
+
+.hashtag:active {
+  color: #4a7bab;
+}

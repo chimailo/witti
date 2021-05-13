@@ -120,13 +120,13 @@ def posts_feed(user):
         top_followed_posts = db.session.query(
             followed_posts, func.row_number().over(
                 order_by=posts_reactions.c.reactions).label(
-                    'sequence')).outerjoin(
-                        posts_reactions, followed_posts.c.posts_id ==
-                        posts_reactions.c.id).subquery()
+                    'sequence')).outerjoin(posts_reactions,
+                        followed_posts.c.posts_id ==
+                            posts_reactions.c.id).subquery()
 
         top_posts = db.session.query(Post, top_followed_posts.c.sequence).join(
             Post, top_followed_posts.c.posts_id == Post.id).order_by(
-                    top_followed_posts.c.sequence.desc())
+                top_followed_posts.c.sequence.desc())
 
         latest_posts = db.session.query(Post, followed_posts.c.posts_id).join(
             Post, Post.id == followed_posts.c.posts_id).order_by(
@@ -186,7 +186,7 @@ def create_post(user, post_id=None):
         post_notifs = []
         for u in user.followers.all():
             post_notifs.append(user.add_notification(
-                    subject='post', item_id=post.id, id=u.id, post_id=post.id))
+                subject='post', item_id=post.id, id=u.id, post_id=post.id))
         db.session.add_all(post_notifs)
 
     try:

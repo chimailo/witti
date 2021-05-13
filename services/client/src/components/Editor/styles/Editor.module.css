@@ -1,0 +1,20 @@
+.editor {
+  box-sizing: border-box;
+  cursor: text;
+  width: 100%;
+  font-size: 16px;
+  line-height: 1.5;
+  border-radius: 8px;
+  background: inherit;
+}
+
+.editor :global(.public-DraftEditor-content) {
+  min-height: 120px;
+  min-width: 550px;
+}
+
+@media screen and (max-width: 600px) {
+  .editor :global(.public-DraftEditor-content) {
+    min-width: 100%;
+  }
+}

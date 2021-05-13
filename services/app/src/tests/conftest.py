@@ -2,11 +2,9 @@ import pytest
 
 from src import create_app, db as _db
 from src.config import TestingConfig
-from src.lib.perms import set_model_perms
-from src.tests.utils import add_user, add_post, add_comment
+from src.tests.utils import add_user, add_post
 from src.blueprints.users.models import User
 from src.blueprints.posts.models import Post
-from src.blueprints.admin.models import Group
 
 
 @pytest.fixture(scope='session')
@@ -49,9 +47,6 @@ def db(app):
     _db.drop_all()
     _db.create_all()
     _db.session.commit()
-
-    set_model_perms(User)
-    set_model_perms(Group)
 
     add_user(name='admin', username='user', email='adminuser@test.com')
 
@@ -131,33 +126,21 @@ def posts(db, session, users):
     u2 = User.find_by_email('regularuser@test.com')
     u3 = User.find_by_email('commonuser@test.com')
 
-    c1 = add_comment(
-        'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u1.id)
-    c2 = add_comment(
-        'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u1.id)
-    c3 = add_comment(
-        'Ut enim ad minim veniam, quis nostrud exercitation ',
-        u2.id,
-        comment_id=c2.id
-    )
-    c4 = add_comment(
-        'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u3.id)
-
     p1 = add_post(
-        'Ut enim ad minim veniam, quis nostrud exercitation ',
-        u1.id,
-        comments=[c3]
-    )
+        'Ut enim ad minim veniam, quis nostrud exercitation ', u1)
     p2 = add_post(
-        'Ut enim ad minim veniam, quis nostrud exercitation ',
-        u1.id,
-        comments=[c1]
-    )
+        'Ut enim ad minim veniam, quis nostrud exercitation ', u1)
+    p3 = add_post(
+        'Ut enim ad minim veniam, quis nostrud exercitation ', u3)
+
     add_post(
-        'Ut enim ad minim veniam, quis nostrud exercitation ',
-        u3.id,
-        comments=[c4]
-    )
+        'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u1, p2.id)
+    add_post(
+        'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u1, p1.id)
+    add_post(
+        'Ut enim ad minim veniam, quis nostrud exercitation ', u2, p1.id)
+    add_post(
+        'ullamco laboris nisi ut aliquip ex ea commodo consequat.', u3, p3.id)
     p1.likes.append(u1)
     p2.likes.append(u1)
 
