@@ -8,8 +8,8 @@ services:
     expose:
       - 5432
     environment:
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     volumes:
       - type: volume
         source: postgres_data
@@ -26,13 +26,15 @@ services:
       - db
     environment:
       - APP_SETTINGS=src.config.ProductionConfig
-      - DATABASE=postgres
-      - DATABASE_URL=${DATABASE_URL}
+      - DB_ENGINE=postgresql
+      - DB_HOST=db
+      - DB_NAME=witti
+      - DB_PORT=5432
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME}
       - FLASK_APP=src/__init__.py
       - FLASK_ENV=production
       - SECRET_KEY={SECRET_KEY}
-      - SQL_HOST=db
-      - SQL_PORT=5432
     expose:
       - 5000
 

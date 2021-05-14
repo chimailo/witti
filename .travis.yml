@@ -38,3 +38,16 @@ after_success:
   - docker push chimailo/witti-server
   - docker push chimailo/witti-client
   - docker push chimailo/witti-nginx
+
+deploy:
+  provider: elasticbeanstalk
+  region: us-east-1
+  app: witti
+  env: Witti-env
+  bucket_name: elasticbeanstalk-us-east-1-672095429397
+  bucket_path: witti-s3
+  on:
+    branch: main
+  access_key_id: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: $AWS_SECRET_KEY

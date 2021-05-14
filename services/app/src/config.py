@@ -4,6 +4,13 @@ from dotenv import load_dotenv
 load_dotenv()
 # basedir = os.path.abspath(os.path.dirname(__file__))
 
+DB_USERNAME = os.environ.get('DB_USERNAME')
+DB_PASSWORD = os.environ.get('DB_PASSWORD')
+DB_ENGINE = os.environ.get('DB_ENGINE')
+DB_NAME = os.environ.get('DB_NAME')
+DB_HOST = os.environ.get('DB_HOST')
+DB_PORT = os.environ.get('DB_PORT')
+
 
 class BaseConfig:
     """Base configuration"""
@@ -37,5 +44,5 @@ class TestingConfig(BaseConfig):
 class ProductionConfig(BaseConfig):
     """Production configuration"""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = f'{DB_ENGINE}://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     SECRET_KEY = os.environ.get('SECRET_KEY')
