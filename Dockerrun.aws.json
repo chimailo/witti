@@ -5,13 +5,15 @@
       "name": "client",
       "image": "chimailo/witti-client",
       "hostname": "client",
-      "essential": true
+      "essential": true,
+      "memory": 128
     },
     {
       "name": "server",
       "image": "chimailo/witti-server",
       "hostname": "app",
-      "essential": false
+      "essential": false,
+      "memory": 128
     },
     {
       "name": "nginx",
@@ -24,7 +26,8 @@
           "containerPort": 80
         }
       ],
-      "links": ["client", "server"]
+      "links": ["client", "server"],
+      "memory": 128
     }
   ]
 }
