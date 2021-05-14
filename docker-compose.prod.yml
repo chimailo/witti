@@ -21,7 +21,6 @@ services:
     build:
       context: ./services/app
       dockerfile: Dockerfile
-    command: gunicorn --bind 0.0.0.0:5000 --access-logfile - manage:app
     depends_on:
       - db
     environment:

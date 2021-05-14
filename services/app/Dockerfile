@@ -22,5 +22,4 @@ RUN chmod +x /usr/src/app/entrypoint.sh
 COPY . /usr/src/app
 
 # run server
-CMD ["/usr/src/app/entrypoint.sh"]
-# CMD gunicorn --bind 0.0.0.0:$PORT --access-logfile - manage:app
+CMD gunicorn --bind 0.0.0.0:5000 --access-logfile - manage:app
