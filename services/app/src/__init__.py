@@ -1,6 +1,6 @@
 import os
 
-from elasticsearch import Elasticsearch
+# from elasticsearch import Elasticsearch
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 # from flask_migrate import Migrate
@@ -36,10 +36,10 @@ def create_app(config=app_settings):
     # migrate.init_app(app, db)
     cors.init_app(app)
 
-    app.elasticsearch = Elasticsearch(app.config['ELASTICSEARCH_URL']) \
-        if app.config['ELASTICSEARCH_URL'] else None
-    app.search_host = app.config['ES_HOST'] if app.config['ES_HOST'] else None
-    app.search_port = app.config['ES_PORT'] if app.config['ES_PORT'] else None
+    # app.elasticsearch = Elasticsearch(app.config['ELASTICSEARCH_URL']) \
+    #     if app.config['ELASTICSEARCH_URL'] else None
+    # app.search_host = app.config['ES_HOST'] if app.config['ES_HOST'] else None
+    # app.search_port = app.config['ES_PORT'] if app.config['ES_PORT'] else None
 
     @app.route('/api/ping')
     def ping():
@@ -53,7 +53,7 @@ def create_app(config=app_settings):
     from src.blueprints.posts.routes import posts
     from src.blueprints.users.routes import users
     from src.blueprints.messages.routes import messages
-    
+
     app.register_blueprint(users)
     app.register_blueprint(posts)
     app.register_blueprint(tags)
