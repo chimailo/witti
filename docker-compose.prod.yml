@@ -25,15 +25,16 @@ services:
       - db
     environment:
       - APP_SETTINGS=src.config.ProductionConfig
-      - DB_ENGINE=postgresql
-      - DB_HOST=db
-      - DB_NAME=witti
-      - DB_PORT=5432
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_USERNAME=${DB_USERNAME}
+      - DATABASE_URL=${DATABASE_URL}
       - FLASK_APP=src/__init__.py
       - FLASK_ENV=production
       - SECRET_KEY={SECRET_KEY}
+      # - DB_ENGINE=postgresql
+      # - DB_HOST=db
+      # - DB_NAME=witti
+      # - DB_PORT=5432
+      # - DB_PASSWORD=${DB_PASSWORD}
+      # - DB_USERNAME=${DB_USERNAME}
     expose:
       - 5000
 

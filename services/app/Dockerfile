@@ -22,4 +22,4 @@ RUN chmod +x /usr/src/app/entrypoint.sh
 COPY . /usr/src/app
 
 # run server
-CMD gunicorn --bind 0.0.0.0:5000 --access-logfile - manage:app
+CMD gunicorn --bind 0.0.0.0:5000 --access-logfile - "src.__init__py:create_app()"
