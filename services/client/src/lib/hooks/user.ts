@@ -26,7 +26,7 @@ export function useSignup() {
       const { email, password, name, username } = values;
 
       const { data }: AxiosResponse<{ token: string }> = await axios.post(
-        '/users/register',
+        '/api/users/register',
         JSON.stringify({ email, password, name, username })
       );
       return data;
@@ -43,7 +43,7 @@ export function useLogin() {
   return useMutation(
     async (values: Pick<AuthParams, 'email' | 'password'>) => {
       const { data }: AxiosResponse<{ token: string }> = await axios.post(
-        '/users/login',
+        '/api/users/login',
         JSON.stringify(values)
       );
       return data;
@@ -63,7 +63,7 @@ export function useAuth() {
   return useQuery<User, APIError>(
     KEYS.AUTH,
     async () => {
-      const { data }: AxiosResponse<User> = await axios.get('/users/auth');
+      const { data }: AxiosResponse<User> = await axios.get('/api/users/auth');
       return data;
     },
     {
@@ -80,7 +80,7 @@ export function useUser(username: string) {
     [KEYS.USER, username],
     async () => {
       const { data }: AxiosResponse<User> = await axios.get(
-        `/profile/${username}`
+        `/api/profile/${username}`
       );
       return data;
     }
@@ -95,34 +95,35 @@ export function useSetProfile() {
 
   return useMutation(
     async ({
-      values
+      values,
     }: {
-      values: Omit<Profile, 'created_on' | 'updated_on'>; cacheKey: string
+      values: Omit<Profile, 'created_on' | 'updated_on'>;
+      cacheKey: string;
     }) => {
-    console.log(values.dob)
-    const res: AxiosResponse<Profile> = await axios.put(
-      '/profile',
-      // @ts-expect-error
-      {...values, dob: new Date(values.dob)}
-    )
-    return res.data
-  },
-  {
-    onMutate: ({cacheKey, values}) => 
-      // @ts-expect-error
-      queryClient.setQueryData<Profile>(cacheKey, oldData => ({
-        ...oldData,
-        name: values.name,
-        username: values.username,
-        bio: values.bio,
-        dob: values.dob,
-        avatar: values.avatar,
-      })),
-    onError: (error: AxiosError<APIError>) => {
-      console.log(error)
+      console.log(values.dob);
+      const res: AxiosResponse<Profile> = await axios.put(
+        '/api/profile',
+        // @ts-expect-error
+        { ...values, dob: new Date(values.dob) }
+      );
+      return res.data;
+    },
+    {
+      onMutate: ({ cacheKey, values }) =>
+        // @ts-expect-error
+        queryClient.setQueryData<Profile>(cacheKey, (oldData) => ({
+          ...oldData,
+          name: values.name,
+          username: values.username,
+          bio: values.bio,
+          dob: values.dob,
+          avatar: values.avatar,
+        })),
+      onError: (error: AxiosError<APIError>) => {
+        console.log(error);
+      },
     }
-  }
-  )
+  );
 }
 
 export function useToFollow() {
@@ -135,9 +136,8 @@ export function useToFollow() {
   >(KEYS.TO_FOLLOW, async () => {
     const {
       data,
-    }: AxiosResponse<
-      Pick<User, 'id' | 'profile' | 'isFollowing'>[]
-    > = await axios.get(`/users/to-follow`);
+    }: AxiosResponse<Pick<User, 'id' | 'profile' | 'isFollowing'>[]> =
+      await axios.get(`/api/users/to-follow`);
     return data;
   });
 }
@@ -149,7 +149,7 @@ export function useInfiniteUsers(url: string) {
     url,
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfiniteUserResponse> = await axios.get(
-        `${url}?cursor=${pageParam}`
+        `/api/${url}?cursor=${pageParam}`
       );
       return res.data;
     },
@@ -181,7 +181,7 @@ export function useFollowUser() {
       widget?: boolean;
     }) => {
       const res: AxiosResponse<User> = await axios.post(
-        `/users/${user_id}/${follow ? 'unfollow' : 'follow'}`
+        `/api/users/${user_id}/${follow ? 'unfollow' : 'follow'}`
       );
       return res.data;
     },
@@ -291,7 +291,7 @@ export function useTagsToFollow() {
     KEYS.TAG_TO_FOLLOW,
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfiniteTagResponse> = await axios.get(
-        `/tags/to-follow?cursor=${pageParam}`
+        `/api/tags/to-follow?cursor=${pageParam}`
       );
       return res.data;
     },
@@ -314,7 +314,7 @@ export function useFollowTag() {
       key: string | any[];
     }) => {
       const res: AxiosResponse<Tag[]> = await axios.post(
-        `/tags/${tag_id}/follow`
+        `/api/tags/${tag_id}/follow`
       );
       return res.data;
     },

@@ -24,7 +24,7 @@ import Head from '../../components/Head';
 import hero from '../../hero.jpg';
 import Logo from '../../components/svg/logo';
 import { CenteredLoading } from '../../components/Loading';
-import {Body} from '../../components/Post/Content'
+import { Body } from '../../components/Post/Content';
 import { ROUTES } from '../../lib/constants';
 import { Post } from '../../types';
 import { QuoteIcon } from '../../components/svg';
@@ -91,13 +91,14 @@ export default function Landing() {
   const { data, status } = useAuth();
   const loggedIn = data && localStorage.getItem('token');
 
-  const { data: posts, isLoading, isError } = useQuery(
-    'featured-posts',
-    async () => {
-      const res: AxiosResponse<Post[]> = await axios.get(`/posts/featured`);
-      return res.data;
-    }
-  );
+  const {
+    data: posts,
+    isLoading,
+    isError,
+  } = useQuery('/api/featured-posts', async () => {
+    const res: AxiosResponse<Post[]> = await axios.get(`/api/posts/featured`);
+    return res.data;
+  });
 
   useEffect(() => {
     if (loggedIn) {
@@ -109,93 +110,93 @@ export default function Landing() {
 
   return (
     <>
-    <Head title='Landing' />
-    {status === 'loading' ? (
-      <CenteredLoading height='100vh' />
-    ) : (
-      <div className={classes.root}>
-        <div className={classes.imgContainer}>
-          <img src={hero} alt='Logo' className={classes.image} />
-        </div>
-        <AppBar color='transparent' elevation={0}>
-          <Container maxWidth='md'>
-            <Toolbar
-              component='nav'
-              disableGutters
-              style={{ justifyContent: 'space-between' }}
-            >
-              <Logo />
-              <div>
-                <Button
-                  variant='outlined'
-                  color='secondary'
-                  component={RouterLink}
-                  to={ROUTES.SIGNUP}
-                  className={classes.margin}
-                >
-                  Sign up
-                </Button>
-                <Button
-                  color='secondary'
-                  component={RouterLink}
-                  to={ROUTES.LOGIN}
-                  className={classes.margin}
-                >
-                  Login
-                </Button>
-              </div>
-            </Toolbar>
-          </Container>
-        </AppBar>
-        <Box
-          height={400}
-          component='main'
-          display='flex'
-          flexDirection='column'
-          justifyContent='space-between'
-        >
-          <Container maxWidth='sm' className={classes.main}>
-            <Typography
-              align='center'
-              variant={matchesXs ? 'h4' : 'h3'}
-              component='h1'
-              color='secondary'
-              gutterBottom
-            >
-              Want to see something funny?
-            </Typography>
-            <Typography
-              component='h6'
-              align='center'
-              color='secondary'
-              paragraph
-            >
-              Join in the fun and share your funny moments.
-            </Typography>
-            <Button
-              size='large'
-              variant='outlined'
-              color='primary'
-              component={RouterLink}
-              to={ROUTES.SIGNUP}
-              style={{ margin: 'auto' }}
-            >
-              Join for free.
-            </Button>
-          </Container>
-          <section className={classes.sample}>
-            <Container maxWidth='sm'>
-              {isLoading && <CenteredLoading />}
-              {isError && (
-                <Typography component='p' align='center'>
-                  An error occured
-                </Typography>
-              )}
-              {posts && <FeaturedPostsCarousel posts={posts} />}
+      <Head title='Landing' />
+      {status === 'loading' ? (
+        <CenteredLoading height='100vh' />
+      ) : (
+        <div className={classes.root}>
+          <div className={classes.imgContainer}>
+            <img src={hero} alt='Logo' className={classes.image} />
+          </div>
+          <AppBar color='transparent' elevation={0}>
+            <Container maxWidth='md'>
+              <Toolbar
+                component='nav'
+                disableGutters
+                style={{ justifyContent: 'space-between' }}
+              >
+                <Logo />
+                <div>
+                  <Button
+                    variant='outlined'
+                    color='secondary'
+                    component={RouterLink}
+                    to={ROUTES.SIGNUP}
+                    className={classes.margin}
+                  >
+                    Sign up
+                  </Button>
+                  <Button
+                    color='secondary'
+                    component={RouterLink}
+                    to={ROUTES.LOGIN}
+                    className={classes.margin}
+                  >
+                    Login
+                  </Button>
+                </div>
+              </Toolbar>
             </Container>
-          </section>
-        </Box>
-      </div>
+          </AppBar>
+          <Box
+            height={400}
+            component='main'
+            display='flex'
+            flexDirection='column'
+            justifyContent='space-between'
+          >
+            <Container maxWidth='sm' className={classes.main}>
+              <Typography
+                align='center'
+                variant={matchesXs ? 'h4' : 'h3'}
+                component='h1'
+                color='secondary'
+                gutterBottom
+              >
+                Want to see something funny?
+              </Typography>
+              <Typography
+                component='h6'
+                align='center'
+                color='secondary'
+                paragraph
+              >
+                Join in the fun and share your funny moments.
+              </Typography>
+              <Button
+                size='large'
+                variant='outlined'
+                color='primary'
+                component={RouterLink}
+                to={ROUTES.SIGNUP}
+                style={{ margin: 'auto' }}
+              >
+                Join for free.
+              </Button>
+            </Container>
+            <section className={classes.sample}>
+              <Container maxWidth='sm'>
+                {isLoading && <CenteredLoading />}
+                {isError && (
+                  <Typography component='p' align='center'>
+                    An error occured
+                  </Typography>
+                )}
+                {posts && <FeaturedPostsCarousel posts={posts} />}
+              </Container>
+            </section>
+          </Box>
+        </div>
       )}
     </>
   );
@@ -244,8 +245,11 @@ function FeaturedPostsCarousel({ posts }: { posts: Post[] }) {
             color='secondary'
             component='p'
           >
-            - { // @ts-expect-error
-            post.author.profile.username}
+            -{' '}
+            {
+              // @ts-expect-error
+              post.author.profile.username
+            }
           </Typography>
         </>
       ))}

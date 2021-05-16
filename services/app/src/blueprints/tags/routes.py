@@ -12,7 +12,7 @@ from src.blueprints.tags.models import Tag
 from src.blueprints.tags.schema import TagSchema
 
 
-tags = Blueprint('tags', __name__, url_prefix='/api/tags')
+tags = Blueprint('tags', __name__, url_prefix='/tags')
 
 
 @tags.route('/ping', methods=['GET'])

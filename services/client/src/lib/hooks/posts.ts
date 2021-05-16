@@ -19,7 +19,7 @@ export function usePost(post_id: number) {
   localStorage.token && setAuthToken(localStorage.token);
 
   return useQuery<Post, AxiosError<APIError>>(`/posts/${post_id}`, async () => {
-    const res: AxiosResponse<Post> = await axios.get(`/posts/${post_id}`);
+    const res: AxiosResponse<Post> = await axios.get(`/api/posts/${post_id}`);
     return res.data;
   });
 }
@@ -31,7 +31,7 @@ export function useInfinitePosts(key: string | any[], url: string) {
     key,
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfinitePostResponse> = await axios.get(
-        `${url}&cursor=${pageParam}`
+        `/api/${url}&cursor=${pageParam}`
       );
       return res.data;
     },
@@ -47,7 +47,7 @@ export function useCreatePost() {
 
   return useMutation(
     async ({ post }: { post: string; author?: User; key?: string | any[] }) => {
-      const res: AxiosResponse<Post> = await axios.post(`/posts`, { post });
+      const res: AxiosResponse<Post> = await axios.post(`/api/posts`, { post });
       return res.data;
     },
     {
@@ -105,7 +105,7 @@ export function useCreateComment() {
   return useMutation(
     async ({ post, post_id }: { post: string; post_id: number }) => {
       const res: AxiosResponse<Post> = await axios.post(
-        `/posts/${post_id}/comments`,
+        `/api/posts/${post_id}/comments`,
         {
           post,
         }
@@ -128,7 +128,9 @@ export function useDeletePost() {
 
   return useMutation(
     async (post_id: number) => {
-      const res: AxiosResponse<Post> = await axios.delete(`/posts/${post_id}`);
+      const res: AxiosResponse<Post> = await axios.delete(
+        `/api/posts/${post_id}`
+      );
       return res.data;
     },
     {
@@ -154,7 +156,7 @@ export function useUpdatePostLike() {
       key: string | any[];
     }) => {
       const res: AxiosResponse<Post> = await axios.post(
-        `/posts/${post_id}/likes`
+        `/api/posts/${post_id}/likes`
       );
       return res.data;
     },
@@ -199,7 +201,7 @@ export function useTag(name: string) {
   localStorage.token && setAuthToken(localStorage.token);
 
   return useQuery<Tag, AxiosError<APIError>>(['tag', name], async () => {
-    const res: AxiosResponse<Tag> = await axios.get(`/tags?name=${name}`);
+    const res: AxiosResponse<Tag> = await axios.get(`/api/tags?name=${name}`);
     return res.data;
   });
 }
@@ -211,7 +213,7 @@ export function useAllTags() {
     `all-tags`,
     async () => {
       const res: AxiosResponse<Pick<Tag, 'id' | 'name'>[]> = await axios.get(
-        `/tags/all-tags`
+        `/api/tags/all-tags`
       );
       return res.data;
     }
@@ -225,7 +227,7 @@ export function useAddTag() {
   return useMutation(
     async (tag: string) => {
       const res: AxiosResponse<Pick<Tag, 'id' | 'name'>> = await axios.post(
-        `/tags`,
+        `/api/tags`,
         {
           name: tag,
         }

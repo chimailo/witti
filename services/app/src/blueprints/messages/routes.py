@@ -15,7 +15,7 @@ from src.blueprints.messages.models import Message, Chat, LastReadMessage
 from src.blueprints.messages.schema import MessageSchema
 from src.blueprints.users.schema import UserSchema
 
-messages = Blueprint('messages', __name__, url_prefix='/api')
+messages = Blueprint('messages', __name__, url_prefix='')
 
 
 @messages.route('/messages/ping', methods=['GET'])

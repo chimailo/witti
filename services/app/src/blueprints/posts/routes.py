@@ -13,15 +13,15 @@ from src.blueprints.posts.models import Post
 from src.blueprints.posts.schema import PostSchema
 
 
-posts = Blueprint('posts', __name__, url_prefix='/api')
+posts = Blueprint('posts', __name__, url_prefix='/posts')
 
 
-@posts.route('/posts/ping', methods=['GET'])
+@posts.route('/ping', methods=['GET'])
 def ping():
     return {'message': 'Post Route!'}
 
 
-@posts.route('/posts/featured', methods=['GET'])
+@posts.route('/featured', methods=['GET'])
 def get_featured_posts():
     try:
         res = Post.query.filter(Post.comment_id.is_(None)).all()
@@ -33,7 +33,7 @@ def get_featured_posts():
         many=True, only=('id', 'body', 'author.profile')).dump(posts))
 
 
-@posts.route('/posts/<int:post_id>', methods=['GET'])
+@posts.route('/<int:post_id>', methods=['GET'])
 @authenticate
 def get_post(user, post_id):
     try:
@@ -53,7 +53,7 @@ def get_post(user, post_id):
         return jsonify(post_dict)
 
 
-@posts.route('/posts/explore', methods=['GET'])
+@posts.route('/explore', methods=['GET'])
 @authenticate
 def get_posts(user):
     feed = request.args.get('feed')
@@ -104,7 +104,7 @@ def get_posts(user):
     }
 
 
-@posts.route('/posts', methods=['GET'])
+@posts.route('', methods=['GET'])
 @authenticate
 def posts_feed(user):
     latest = request.args.get('latest')
@@ -163,8 +163,8 @@ def posts_feed(user):
     }
 
 
-@posts.route('/posts/<int:post_id>/comments', methods=['POST'])
-@posts.route('/posts', methods=['POST'])
+@posts.route('/<int:post_id>/comments', methods=['POST'])
+@posts.route('', methods=['POST'])
 @authenticate
 def create_post(user, post_id=None):
     req_data = request.get_json()
@@ -202,7 +202,7 @@ def create_post(user, post_id=None):
         return response
 
 
-@posts.route('/posts/<int:post_id>', methods=['DELETE'])
+@posts.route('/<int:post_id>', methods=['DELETE'])
 @authenticate
 def delete_post(user, post_id):
     post = Post.find_by_id(post_id)
@@ -229,7 +229,7 @@ def delete_post(user, post_id):
         return {'message': 'Post was successfuly deleted.'}
 
 
-@posts.route('/posts/<int:post_id>/likes', methods=['POST'])
+@posts.route('/<int:post_id>/likes', methods=['POST'])
 @authenticate
 def update_like(user, post_id):
     post = Post.find_by_id(post_id)
@@ -255,7 +255,7 @@ def update_like(user, post_id):
         return jsonify(post.to_dict(user))
 
 
-@posts.route('/posts/<int:post_id>/comments', methods=['GET'])
+@posts.route('/<int:post_id>/comments', methods=['GET'])
 @authenticate
 def get_post_comments(user, post_id):
     post = Post.find_by_id(post_id)

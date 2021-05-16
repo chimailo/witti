@@ -59,57 +59,57 @@ export default function Message() {
     <>
       <Head title='Chats' description={auth?.profile.name} />
       <Container maxWidth='xl' disableGutters>
-      <Hidden xsDown>
-        <Sidebar user={auth} />
-      </Hidden>
-      <div className={classes.main}>
-        <Grid container spacing={1}>
-          <Grid item xs={12} md={6}>
-            <Header title='Messages' back search />
-            <Paper square elevation={0} className={classes.paper}>
-              {isLoading ? (
-                <CenteredLoading />
-              ) : isError ? (
-                <Box py={4}>
-                  <Typography color='textSecondary' align='center'>
-                    {error?.response?.data.message}
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  <Messages data={data} />
-                  <LoadMore
-                    fullWidth
-                    iconSize={24}
-                    ref={loadMoreRef}
-                    hasNextPage={hasNextPage}
-                    isFetchingNextPage={isFetchingNextPage}
-                    fetchNextPage={() => fetchNextPage()}
-                    style={{ textTransform: 'capitalize' }}
-                  />
-                </>
-              )}
-            </Paper>
-          </Grid>
-          <Hidden smDown>
-            <Grid
-              item
-              xs={12}
-              md={6}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Typography variant='h6'>
-                Click on a chat to display it here.
-              </Typography>
+        <Hidden xsDown>
+          <Sidebar user={auth} />
+        </Hidden>
+        <div className={classes.main}>
+          <Grid container spacing={1}>
+            <Grid item xs={12} md={6}>
+              <Header title='Messages' back search />
+              <Paper square elevation={0} className={classes.paper}>
+                {isLoading ? (
+                  <CenteredLoading />
+                ) : isError ? (
+                  <Box py={4}>
+                    <Typography color='textSecondary' align='center'>
+                      {error?.response?.data.message}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <>
+                    <Messages data={data} />
+                    <LoadMore
+                      fullWidth
+                      iconSize={24}
+                      ref={loadMoreRef}
+                      hasNextPage={hasNextPage}
+                      isFetchingNextPage={isFetchingNextPage}
+                      fetchNextPage={() => fetchNextPage()}
+                      style={{ textTransform: 'capitalize' }}
+                    />
+                  </>
+                )}
+              </Paper>
             </Grid>
-          </Hidden>
-        </Grid>
-      </div>
-    </Container>
+            <Hidden smDown>
+              <Grid
+                item
+                xs={12}
+                md={6}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography variant='h6'>
+                  Click on a chat to display it here.
+                </Typography>
+              </Grid>
+            </Hidden>
+          </Grid>
+        </div>
+      </Container>
     </>
   );
 }

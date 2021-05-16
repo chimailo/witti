@@ -41,7 +41,4 @@ COPY conf /etc/nginx
 COPY --from=builder /usr/src/app/build /usr/share/nginx/html
 
 # expose port
-EXPOSE 80
-
-# run nginx
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000

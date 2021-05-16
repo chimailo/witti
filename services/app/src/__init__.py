@@ -41,7 +41,7 @@ def create_app(config=app_settings):
     # app.search_host = app.config['ES_HOST'] if app.config['ES_HOST'] else None
     # app.search_port = app.config['ES_PORT'] if app.config['ES_PORT'] else None
 
-    @app.route('/api/ping')
+    @app.route('/ping')
     def ping():
         return {"message": "Ping!"}
 

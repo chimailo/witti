@@ -11,10 +11,10 @@ from src.blueprints.profiles.models import Profile
 from src.blueprints.profiles.schema import ProfileSchema
 
 
-profile = Blueprint('profile', __name__, url_prefix='/api')
+profile = Blueprint('profile', __name__, url_prefix='/profile')
 
 
-@profile.route('/profile/check-username', methods=['POST'])
+@profile.route('/check-username', methods=['POST'])
 def check_username():
     data = request.get_json()
     user = Profile.find_by_username(data.get('username'))
@@ -26,7 +26,7 @@ def check_username():
     return {'res': True}
 
 
-@profile.route('/profile/<username>', methods=['GET'])
+@profile.route('/<username>', methods=['GET'])
 @authenticate
 def get_profile(user, username):
     a_user = Profile.find_by_username(username).user
@@ -41,7 +41,7 @@ def get_profile(user, username):
     return not_found('User not found.')
 
 
-@profile.route('/profile', methods=['PUT'])
+@profile.route('', methods=['PUT'])
 @authenticate
 def update_profile(user):
     request_data = request.get_json()
@@ -70,7 +70,7 @@ def update_profile(user):
         return jsonify(ProfileSchema().dump(profile))
 
 
-@profile.route('/profile', methods=['DELETE'])
+@profile.route('', methods=['DELETE'])
 @authenticate
 def delete_profile(user):
     try:

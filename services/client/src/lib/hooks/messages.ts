@@ -16,7 +16,7 @@ export function useInfiniteMessages() {
     KEYS.MESSAGES_KEY,
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfiniteMessageResponse> = await axios.get(
-        `/chats?cursor=${pageParam}`
+        `/api/chats?cursor=${pageParam}`
       );
       return res.data;
     },
@@ -33,7 +33,7 @@ export function useInfiniteChatMessages(username: string) {
     [KEYS.CHAT_KEY, username],
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfiniteMessageResponse> = await axios.get(
-        `/messages?username=${username}&cursor=${pageParam}`
+        `/api/messages?username=${username}&cursor=${pageParam}`
       );
       return res.data;
     },
@@ -58,7 +58,7 @@ export function useSendMessage() {
       from?: number;
     }) => {
       const res: AxiosResponse<Message> = await axios.post(
-        `/messages?user=${to.id}`,
+        `/api/messages?user=${to.id}`,
         { body: message }
       );
       return res.data;
@@ -125,7 +125,7 @@ export function useDeleteMessage() {
       userOnly?: boolean;
     }) => {
       const res: AxiosResponse<{ message: string }> = await axios.delete(
-        `/messages/${msg_id}${userOnly ? '?userOnly=true' : ''}`
+        `/api/messages/${msg_id}${userOnly ? '?userOnly=true' : ''}`
       );
       return res.data;
     },

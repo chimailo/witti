@@ -20,7 +20,7 @@ export function useNotificationCount() {
     KEYS.NOTIFS_COUNT,
     async () => {
       const res: AxiosResponse<{ count: number }> = await axios.get(
-        `/notifications/count`
+        `/api/notifications/count`
       );
       return res.data;
     },
@@ -37,7 +37,7 @@ export function useInfiniteNotifications() {
     KEYS.NOTIFS,
     async ({ pageParam = 0 }) => {
       const res: AxiosResponse<InfiniteNotificationResponse> = await axios.get(
-        `/notifications?cursor=${pageParam}`
+        `/api/notifications?cursor=${pageParam}`
       );
       return res.data;
     },
@@ -54,7 +54,7 @@ export function useRemoveNotification() {
   return useMutation(
     async (notif_id: number) => {
       const res: AxiosResponse<Notification> = await axios.delete(
-        `/notifications/${notif_id}`
+        `/api/notifications/${notif_id}`
       );
       return res.data;
     },
